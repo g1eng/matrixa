@@ -1,8 +1,25 @@
-// Matrix trait
-//
-//
+//! Tensors::Matrix is a struct for matrices manipulation.
+//! 
+//!
+//! ```rust
+//! use tensors::matrix::{Matrix,TensorProcessor,I32Matrix,F32Matrix};
+//!
+//!  let mut im = I32Matrix::new();
+//!  let mut fm = F32Matrix::new();
+//!  im.push(vec![1,2,3,4,5])
+//!    .push(vec![5,6,7,8,9]);
+//!  fm.push(vec![1.2,3.4,5.6,7.8]);
+//!  im.add(1).print();
+//!  fm.print();
+//! ```
+//!
+//!
+
 pub trait Matrix {
     fn print(&self);
+    fn check_zero_len(&self);
+    fn replace_row(&mut self, src: usize, dst: usize) -> &mut Self;
+    fn replace_col(&mut self, src: usize, dst: usize) -> &mut Self;
 }
 
 pub trait TensorProcessor {
@@ -11,9 +28,6 @@ pub trait TensorProcessor {
     fn multiple(&mut self, val: i32) -> &mut Self;
     fn divide(&mut self, val: i32) -> &mut Self;
     fn residue(&mut self, val: i32) -> &mut Self;
-    fn check_zero_len(&self);
-    fn replace_row(&mut self, src: usize, dst: usize) -> &mut Self;
-    fn replace_col(&mut self, src: usize, dst: usize) -> &mut Self;
     fn translate(&mut self) -> &mut Self;
 
     fn by(&mut self, m: I32Matrix) -> &mut Self;
@@ -48,12 +62,83 @@ impl I32Matrix {
         self.data.push(data);
         self
     }
+
+
+}
+
+#[cfg(test)]
+mod tests_i32_matrix {
+    use crate::I32Matrix;
+
+    #[test]
+    #[should_panic]
+    fn test_push(){
+        I32Matrix::new().push(vec![1,2,3]).push(vec![1]);
+    }
 }
 
 impl Matrix for I32Matrix {
     fn print(&self){
         println!("{:?}",self.data)
     }
+
+    //行列サイズ確認
+    // 長さ0で強制終了
+    fn check_zero_len(&self) {
+        if self.data.len() == 0 {
+            panic!("zero matrix length detected");
+        }
+    }
+
+
+    //行置換操作
+    //
+    fn replace_row(&mut self, src: usize, dst: usize) -> &mut Self {
+        self.check_zero_len();
+
+        if src >= self.data.len() {
+            panic!("src address out of range {}", src);
+        } else if dst >= self.data.len() {
+            panic!("dst address out of range {}", dst);
+        }
+
+
+        let mut src_data = Vec::new();
+        let mut dst_data = Vec::new();
+
+        for i in 0..self.data.len() {
+            src_data.push(self.data[src][i]);
+            dst_data.push(self.data[dst][i]);
+        }
+        self.data[src] = dst_data;
+        self.data[dst] = src_data;
+        self
+    }
+
+    //列置換操作
+    //
+    fn replace_col(&mut self, src: usize, dst: usize) -> &mut Self {
+        self.check_zero_len();
+
+        if src >= self.data[0].len() {
+            panic!("src address out of range {}", src);
+        } else if dst >= self.data[0].len() {
+            panic!("dst address out of range {}", dst);
+        }
+
+        for i in 0..self.data.len() {
+            for j in 0..self.data[0].len() {
+                let src_data = self.data[i][src];
+                let dst_data = self.data[i][dst];
+                self.data[i][src] = dst_data;
+                self.data[i][dst] = src_data;
+            }
+        }
+        self
+
+    }
+
+
 }
 
 impl Iterator for I32Matrix {
@@ -70,14 +155,6 @@ impl Iterator for I32Matrix {
 }
 
 impl TensorProcessor for I32Matrix {
-
-    //行列サイズ確認
-    // 長さ0で強制終了
-    fn check_zero_len(&self) {
-        if self.data.len() == 0 {
-            panic!("zero matrix length detected");
-        }
-    }
 
     //一括加算
     //
@@ -139,53 +216,6 @@ impl TensorProcessor for I32Matrix {
         self
     }
 
-    //行置換操作
-    //
-    fn replace_row(&mut self, src: usize, dst: usize) -> &mut Self {
-        self.check_zero_len();
-
-        if src >= self.data.len() {
-            panic!("src address out of range {}", src);
-        } else if dst >= self.data.len() {
-            panic!("dst address out of range {}", dst);
-        }
-
-
-        let mut src_data: Vec<i32> = Vec::new();
-        let mut dst_data: Vec<i32> = Vec::new();
-
-        for i in 0..self.data.len() {
-            src_data.push(self.data[src][i]);
-            dst_data.push(self.data[dst][i]);
-        }
-        self.data[src] = dst_data;
-        self.data[dst] = src_data;
-        self
-    }
-
-    //列置換操作
-    //
-    fn replace_col(&mut self, src: usize, dst: usize) -> &mut Self {
-        self.check_zero_len();
-
-        if src >= self.data[0].len() {
-            panic!("src address out of range {}", src);
-        } else if dst >= self.data[0].len() {
-            panic!("dst address out of range {}", dst);
-        }
-
-        for i in 0..self.data.len() {
-            for j in 0..self.data[0].len() {
-                let src_data = self.data[i][src];
-                let dst_data = self.data[i][dst];
-                self.data[i][src] = dst_data;
-                self.data[i][dst] = src_data;
-            }
-        }
-        self
-
-    }
-
     // 転置
     //
     fn translate (&mut self) -> &mut Self {
@@ -237,7 +267,7 @@ impl TensorProcessor for I32Matrix {
             for j in 0..m.data.len() {
                 for seq in 0..res_length {
                     //println!("res[{}][{}] += self.data[{}][{}] + m.data[{}][{}] = {}", i, seq, seq, j, j, seq, self.data[seq][j] * m.data[j][seq]);
-                    res[i][seq] += (self.data[seq][j] * m.data[j][seq]);
+                    res[i][seq] += self.data[i][j] * m.data[j][seq];
                 }
             }
         }
@@ -316,6 +346,63 @@ impl Matrix for F32Matrix {
     fn print(&self){
         println!("{:?}",self.data)
     }
+
+    //行列サイズ確認
+    // 長さ0で強制終了
+    fn check_zero_len(&self) {
+        if self.data.len() == 0 {
+            panic!("zero matrix length detected");
+        }
+    }
+
+
+    //行置換操作
+    //
+    fn replace_row(&mut self, src: usize, dst: usize) -> &mut Self {
+        self.check_zero_len();
+
+        if src >= self.data.len() {
+            panic!("src address out of range {}", src);
+        } else if dst >= self.data.len() {
+            panic!("dst address out of range {}", dst);
+        }
+
+
+        let mut src_data = Vec::new();
+        let mut dst_data = Vec::new();
+
+        for i in 0..self.data.len() {
+            src_data.push(self.data[src][i]);
+            dst_data.push(self.data[dst][i]);
+        }
+        self.data[src] = dst_data;
+        self.data[dst] = src_data;
+        self
+    }
+
+    //列置換操作
+    //
+    fn replace_col(&mut self, src: usize, dst: usize) -> &mut Self {
+        self.check_zero_len();
+
+        if src >= self.data[0].len() {
+            panic!("src address out of range {}", src);
+        } else if dst >= self.data[0].len() {
+            panic!("dst address out of range {}", dst);
+        }
+
+        for i in 0..self.data.len() {
+            for j in 0..self.data[0].len() {
+                let src_data = self.data[i][src];
+                let dst_data = self.data[i][dst];
+                self.data[i][src] = dst_data;
+                self.data[i][dst] = src_data;
+            }
+        }
+        self
+
+    }
+
 }
 
 impl Iterator for F32Matrix {

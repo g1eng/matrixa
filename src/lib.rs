@@ -1,18 +1,13 @@
 pub mod matrix;
 pub use self::matrix::{Matrix,I32Matrix,F32Matrix};
+//pub use self::list::{DataList,StrList};
 
 pub struct I32TensorSet {
     pub dataset: Vec<I32Matrix>,
-    current: usize,
-    rowlen: usize,
-    max: usize,
 }
 
 pub struct F32TensorSet {
     pub dataset: Vec<F32Matrix>,
-    current: usize,
-    rowlen: usize,
-    max: usize,
 }
 
 pub trait TensorLinearOperator {
