@@ -5,6 +5,9 @@ fn main(){
     let mut c = I32Matrix::new();
     let mut t = I32Matrix::new();
 
+    let mut m = I32Matrix::new();
+    let mut n = I32Matrix::new();
+
 
     t.push(vec![1,1,1])
         .push(vec![1,7,2])
@@ -33,4 +36,16 @@ fn main(){
     c.replace_row(0,2).print();
     c.translate().print();
 
+
+    println!("by");
+    m
+        .push(vec![1,2,3])
+        .push(vec![4,5,7])
+        .print();
+    n
+        .push(vec![1,3])
+        .push(vec![5,7])
+        .push(vec![10,10])
+        .print();
+    m.by(n).print();
 }

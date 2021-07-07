@@ -16,6 +16,7 @@ pub trait TensorProcessor {
     fn replace_col(&mut self, src: usize, dst: usize) -> &mut Self;
     fn translate(&mut self) -> &mut Self;
 
+    fn by(&mut self, m: I32Matrix) -> &mut Self;
 }
 
 // I32Matrix
@@ -196,7 +197,7 @@ impl TensorProcessor for I32Matrix {
 
         for i in 0..self.data.len() {
             for j in 0..self.data[0].len() {
-                if (i<=limit && j >= limit){
+                if i<=limit && j >= limit {
                     let src = self.data[i][j];
                     let dst = self.data[j][i];
                     self.data[i][j] = dst;
@@ -206,6 +207,63 @@ impl TensorProcessor for I32Matrix {
         }
         self
    }
+
+    //行列積
+    //
+    fn by (&mut self, m: I32Matrix) -> &mut Self {
+        self.check_zero_len();
+        m.check_zero_len();
+        if self.data.len() != m.data[0].len() {
+            panic!("row length not matched to the col length of argument")
+        } else if self.data[0].len() != m.data.len() {
+            panic!("col length not matched to the row length of argument")
+        }
+        //解行列のサイズ
+        let mut res_length: usize = self.data.len();
+        let mut res: Vec<Vec<i32>> = Vec::new();
+
+        //解行列の初期化
+        while res.len() < res_length {
+            res.push(Vec::new());
+        }
+        for i in 0..res_length {
+            while res[i].len() < res_length {
+                res[i].push(0);
+            }
+        }
+        
+        //解行列の計算
+        for i in 0..self.data.len() {
+            for j in 0..m.data.len() {
+                for seq in 0..res_length {
+                    //println!("res[{}][{}] += self.data[{}][{}] + m.data[{}][{}] = {}", i, seq, seq, j, j, seq, self.data[seq][j] * m.data[j][seq]);
+                    res[i][seq] += (self.data[seq][j] * m.data[j][seq]);
+                }
+            }
+        }
+
+        //println!("res: {:?}",res);
+
+        // self.data 行列のリサイズ
+        while self.data.len() < res_length {
+            self.data.push(Vec::new());
+        }
+        for i in 0..self.data.len() {
+            while self.data[i].len() > res_length {
+                self.data[i].pop();
+            }
+        }
+
+
+        //解行列のselfへの適用
+        for i in 0..res_length {
+            for j in 0..res_length {
+                self.data[i][j] = res[i][j];
+            }
+        }
+        //println!("by");
+        self
+    }
 }
 
 
