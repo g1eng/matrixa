@@ -11,7 +11,7 @@
 //!    .push(vec![5,6,7,8,9]);
 //!  fm.push(vec![1.23,4.56,7.89]);
 //!  im.add(1).print();
-//!  im.multiple(3).print();
+//!  im.mul(3).print();
 //!  fm.print();
 //! ```
 //!
@@ -41,9 +41,9 @@ pub struct Numbers<T> {
 pub trait TensorProcessor<T> {
     fn zero(&mut self) -> &mut Self;
     fn add(&mut self, val: T) -> &mut Self;
-    fn substract(&mut self, val: T) -> &mut Self;
-    fn multiple(&mut self, val: T) -> &mut Self;
-    fn divide(&mut self, val: T) -> &mut Self;
+    fn sub(&mut self, val: T) -> &mut Self;
+    fn mul(&mut self, val: T) -> &mut Self;
+    fn div(&mut self, val: T) -> &mut Self;
     fn by(&mut self, val: Numbers<T>) -> &mut Self;
 }
 
@@ -310,7 +310,7 @@ where
 
     //一括減算
     //
-    fn substract(&mut self, val: T) -> &mut Self {
+    fn sub(&mut self, val: T) -> &mut Self {
         //self.check_zero_len();
         for i in 0 .. self.data.len() {
             for j in 0..self.data[0].len() {
@@ -326,7 +326,7 @@ where
 
     //一括乗算
     //
-    fn multiple(&mut self, val: T) -> &mut Self {
+    fn mul(&mut self, val: T) -> &mut Self {
         //self.check_zero_len();
         for i in 0..self.data.len() {
             for j in 0..self.data[0].len() {
@@ -342,7 +342,7 @@ where
 
     //一括除算
     // (i32デフォルトでは端数切捨て)
-    fn divide(&mut self, val: T) -> &mut Self {
+    fn div(&mut self, val: T) -> &mut Self {
         //self.check_zero_len();
         for i in 0..self.data.len() {
             for j in 0..self.data[0].len() {
@@ -603,10 +603,50 @@ mod tests_processor {
     #[test]
     fn test_add(){
         let mut m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
-        assert_eq!(m.data[0][1],2);
-        assert_eq!(m.data[1][2],6);
+        let res = mat![i32: [2,3,4],[5,6,7],[8,9,10]];
         m.add(1);
-        assert_eq!(m.data[0][1],3);
-        assert_eq!(m.data[1][2],7);
+        for i in 0..m.data.len() {
+            for j in 0..m.data[0].len() {
+                assert_eq!(m.data[i][j], res.data[i][j]);
+            }
+        }
     }
+
+    #[test]
+    fn test_sub(){
+        let mut m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
+        let res = mat![i32: [-4,-3,-2],[-1,0,1],[2,3,4]];
+        m.sub(5);
+        for i in 0..m.data.len() {
+            for j in 0..m.data[0].len() {
+                assert_eq!(m.data[i][j], res.data[i][j]);
+            }
+        }
+    }
+
+    #[test]
+    fn test_mul(){
+        let mut m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
+        let res = mat![i32: [2,4,6],[8,10,12],[14,16,18]];
+        m.mul(2);
+        for i in 0..m.data.len() {
+            for j in 0..m.data[0].len() {
+                assert_eq!(m.data[i][j], res.data[i][j]);
+            }
+        }
+
+    }
+
+    #[test]
+    fn test_div(){
+        let mut m = mat![i32: [2,4,6],[8,10,12],[14,16,18]];
+        let res = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
+        m.div(2);
+        for i in 0..m.data.len() {
+            for j in 0..m.data[0].len() {
+                assert_eq!(m.data[i][j], res.data[i][j]);
+            }
+        }
+    }
+
 }

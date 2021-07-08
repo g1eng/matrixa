@@ -29,10 +29,10 @@ fn main(){
 
     t
         .add(5)
-        .multiple(2)
-        .substract(8)
-        .divide(3)
-        .multiple(13);
+        .mul(2)
+        .sub(8)
+        .div(3)
+        .mul(13);
     t.col_replace(0,2);
     t.residue(2);
 
