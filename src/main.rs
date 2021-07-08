@@ -1,5 +1,5 @@
 //use std::path::PathBuf;
-use tensors::matrix::{Matrix,TensorProcessor,Numbers};
+use tensors::core::{Matrix,TensorProcessor,Numbers};
 use tensors::mat;
 
 fn main(){
@@ -50,4 +50,18 @@ fn main(){
         .push(vec![10,10])
         .print();
     m.by(n).print();
+
+    mat![
+        i32:
+            [1,3,5],
+            [7,11,13],
+            [17,19,23]
+    ].by(
+        mat![
+        i32:
+            [29,31,37],
+            [39,41,43],
+            [47,53,59]
+        ]
+    ).print();
 }

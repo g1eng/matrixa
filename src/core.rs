@@ -2,14 +2,16 @@
 //! 
 //!
 //! ```rust
-//! use tensors::matrix::{Matrix,TensorProcessor,Numbers,F32Matrix};
+//! use tensors::core::{Matrix,TensorProcessor,Numbers};
+//! use tensors::mat;
 //!
-//!  let mut im = Numbers::new();
-//!  let mut fm = F32Matrix::new();
+//!  let mut im = Numbers::<i32>::new();
+//!  let mut fm = mat![f32: [1.0,2.0,3.0]];
 //!  im.push(vec![1,2,3,4,5])
 //!    .push(vec![5,6,7,8,9]);
-//!  fm.push(vec![1.2,3.4,5.6,7.8]);
+//!  fm.push(vec![1.23,4.56,7.89]);
 //!  im.add(1).print();
+//!  im.multiple(3).print();
 //!  fm.print();
 //! ```
 //!
@@ -142,6 +144,7 @@ where
         self
 
     }
+
     // 転置
     //
     fn transpose (&mut self) -> &mut Self {
@@ -169,18 +172,6 @@ where
 
 
 }
-
-#[cfg(test)]
-mod tests_i32_matrix {
-    use crate::Numbers;
-
-    #[test]
-    #[should_panic]
-    fn test_push(){
-        Numbers::new().push(vec![1,2,3]).push(vec![1]);
-    }
-}
-
 
 impl<T> Iterator for Numbers<T> where T: Clone {
     type Item = Vec<T>;
@@ -354,5 +345,123 @@ where
         }
 
         self
+    }
+}
+
+
+// 行列インスンタンス初期化用マクロ
+//
+// ```rust
+// use tensors::matrix::{Matrix,TensorProcessor,Numbers};
+// use tensors::mat;
+//
+//  let mut fm = mat![f32: [1.0,2.0,3.0]];
+//  assert_eq!(im.data[0].len(), 5)
+//  assert_eq!(fm.data[0].len(), 3)
+//  assert_eq!(fm.data[0][2], 3.0)
+//
+//  im.print();
+//  fm.print();
+// ```
+#[macro_export]
+macro_rules! mat {
+    ( $t:ty : $( [ $( $x:expr ),+ ] ),* ) => {
+        {
+            let mut matrix: Numbers<$t> = Numbers::new();
+            let mut vec_len = 0;
+            let mut row = 0;
+            $(
+                let mut t_vec = Vec::new();
+                $(
+                    t_vec.push($x);
+                )*
+                if vec_len == 0 {
+                    vec_len = t_vec.len();
+                } else if vec_len != t_vec.len() {
+                    panic!("invalid vector length for {:?} on row {}!", t_vec, row)
+                }
+                row += 1;
+                matrix.data.push(t_vec);
+            )*
+            matrix
+        }
+    };
+    ( $x:ty ) => {
+        {
+            Numbers::<$x>::new()
+        }
+    };
+}
+
+
+
+#[cfg(test)]
+mod tests_matrix {
+    use crate::{Matrix,Numbers};
+
+    #[test]
+    fn test_new_i32(){
+        let m = Numbers::<i32>::new();
+        assert_eq!(m.data.len(),0);
+    }
+
+    #[test]
+    fn test_new_f32(){
+        let m = Numbers::<f32>::new();
+        assert_eq!(m.data.len(),0);
+    }
+
+    #[test]
+    fn test_macro_with_type(){
+        let mut m = mat![f32];
+        assert_eq!(m.data.len(), 0);
+        m.data.push(vec![1.234,5.678]);
+    }
+
+    #[test]
+    fn test_macro_with_values(){
+        let mut m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        assert_eq!(m.data.len(), 3);
+        assert_eq!(m.data[0].len(), 5);
+        assert_eq!(m.data[2][2], 5);
+        m.data.push(vec![5,6,7,8,9]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_macro_invalid_len(){
+        mat![i32: [1,23],[4,5,6]];
+    }
+
+    #[test]
+    fn test_print(){
+        let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        m.print();
+    }
+
+    #[test]
+    fn test_push(){
+        Numbers::<i32>::new().push(vec![1,2]).push(vec![3,4]);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_push_unmatched_len(){
+        Numbers::<i32>::new().push(vec![1,2,3]).push(vec![1]);
+    }
+}
+
+#[cfg(test)]
+mod tests_processor {
+    use crate::{Matrix,Numbers,TensorProcessor};
+
+    #[test]
+    fn test_add(){
+        let mut m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
+        assert_eq!(m.data[0][1],2);
+        assert_eq!(m.data[1][2],6);
+        m.add(1);
+        assert_eq!(m.data[0][1],3);
+        assert_eq!(m.data[1][2],7);
     }
 }
