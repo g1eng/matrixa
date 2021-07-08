@@ -42,6 +42,7 @@ fn main(){
     c.transpose().print();
 
     println!("by");
+
     m
         .push(vec![1,2,3])
         .push(vec![4,5,7])
@@ -50,6 +51,8 @@ fn main(){
         .push(vec![10,10])
         .print();
     m.by(n).print();
+
+    println!("{:?}", m.get());
 
     mat![
         i32:

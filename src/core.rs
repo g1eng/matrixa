@@ -16,17 +16,23 @@
 //! ```
 //!
 
-pub trait Matrix {
+pub trait Matrix<T> {
     fn print(&self);
+    fn get(&self) -> &Vec<Vec<T>>;
+    fn set(&mut self, data: Vec<Vec<T>>);
+    fn row(&self, num: usize) -> Vec<T>;
+    fn col(&self, num: usize) -> Vec<T>;
     fn replace_row(&mut self, src: usize, dst: usize) -> &mut Self;
     fn replace_col(&mut self, src: usize, dst: usize) -> &mut Self;
     fn transpose(&mut self) -> &mut Self;
-    fn check_zero_len(&self);
+    fn check_integrity(&self);
     fn debug(&mut self) -> &mut Self;
 }
 
 pub struct Numbers<T> {
-    pub data: Vec<Vec<T>>,
+    data: Vec<Vec<T>>,
+    rows: usize,
+    cols: usize,
     current: usize,
     max: usize,
     debug: bool,
@@ -48,33 +54,55 @@ impl<T: std::fmt::Debug> Numbers<T> {
         Numbers {
             data: v,
             current: 0,
+            rows: 0,
+            cols: 0,
             max: 0,
             debug: false,
         }
     }
     pub fn push(&mut self, data: Vec<T>) -> &mut Self {
         self.max += 1;
-        let rowlen = self.data.len();
 
-        if rowlen != 0 {
+        if self.rows != 0 {
             if self.data[0].len() != data.len(){
-                panic!("Invalid vector length: {}, expected: {}",data.len(), rowlen);
+                panic!("Invalid vector length: {}, expected: {}",data.len(), self.rows);
             }
         }
         if self.debug {
             println!("pushing {:?}", data);
         }
+        self.cols = data.len();
+
         self.data.push(data);
+        self.rows = self.data.len();
         self
     }
 }
 
-impl<T> Matrix for Numbers<T> 
+impl<T> Matrix <T> for Numbers<T> 
 where
     T: std::fmt::Debug + Copy
 {
     fn print(&self){
         println!("{:?}",self.data)
+    }
+
+    //行列データへのアクセサ
+    //
+    fn get(&self) -> &Vec<Vec<T>>{
+        &self.data
+    }
+
+    //行列データのセッター
+    //
+    fn set(&mut self, m: Vec<Vec<T>>){
+        if m.len() == 0 {
+            panic!("argument has zero length");
+        }
+        if self.debug {
+            println!("new data set: {:?}", m);
+        }
+        self.data = m;
     }
 
     fn debug(&mut self) -> &mut Self {
@@ -86,11 +114,37 @@ where
 
     //行列サイズ確認
     // 長さ0で強制終了
-    fn check_zero_len(&self) {
+    fn check_integrity(&self) {
         if self.data.len() == 0 {
             panic!("zero matrix length detected");
         }
     }
+
+    fn row(&self, num: usize) -> Vec<T> {
+        self.check_integrity();
+        if num >= self.data.len() {
+            panic!("row number {} is out of order: must be less than {}",num, self.data.len());
+        } else {
+            let mut res :Vec<T> = Vec::new();
+            for i in 0..self.data[num].len(){ 
+                res.push(self.data[num][i]);
+            }
+            res
+        }
+    }
+
+    fn col(&self, num: usize) -> Vec<T> {
+        self.check_integrity();
+        if num >= self.data[0].len() {
+            panic!("colum number {} is out of order: must be less than {}",num, self.data[0].len());
+        }
+        let mut res: Vec<T> = Vec::new();
+        for i in 0..self.data.len() {
+            res.push(self.data[i][num]);
+        }
+        res
+    }
+
 
     //行置換操作
     //
@@ -381,7 +435,7 @@ macro_rules! mat {
                     panic!("invalid vector length for {:?} on row {}!", t_vec, row)
                 }
                 row += 1;
-                matrix.data.push(t_vec);
+                matrix.push(t_vec);
             )*
             matrix
         }
@@ -415,7 +469,7 @@ mod tests_matrix {
     fn test_macro_with_type(){
         let mut m = mat![f32];
         assert_eq!(m.data.len(), 0);
-        m.data.push(vec![1.234,5.678]);
+        //m.data.push(vec![1.234,5.678]);
     }
 
     #[test]
@@ -424,7 +478,7 @@ mod tests_matrix {
         assert_eq!(m.data.len(), 3);
         assert_eq!(m.data[0].len(), 5);
         assert_eq!(m.data[2][2], 5);
-        m.data.push(vec![5,6,7,8,9]);
+        //m.data.push(vec![5,6,7,8,9]);
     }
 
     #[test]
@@ -449,6 +503,34 @@ mod tests_matrix {
     fn test_push_unmatched_len(){
         Numbers::<i32>::new().push(vec![1,2,3]).push(vec![1]);
     }
+
+    #[test]
+    fn test_row(){
+        let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        assert_eq!(m.row(1)[2],4);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_row_error(){
+        let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        m.row(5);
+    }
+
+    #[test]
+    fn test_col(){
+        let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        assert_eq!(m.col(1)[1],3);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_col_error(){
+        let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        m.row(4);
+    }
+
+
 }
 
 #[cfg(test)]
