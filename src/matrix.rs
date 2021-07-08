@@ -40,7 +40,7 @@ pub trait TensorProcessor<T> {
 }
 
 // + std::ops::{AddAssign,SubAssign,MulAssign,DivAssign}
-impl<T> Numbers<T> {
+impl<T: std::fmt::Debug> Numbers<T> {
     pub fn new() -> Self {
         let v: Vec<Vec<T>> = Vec::new();
         Numbers {
@@ -59,6 +59,9 @@ impl<T> Numbers<T> {
                 panic!("Invalid vector length: {}, expected: {}",data.len(), rowlen);
             }
         }
+        if self.debug {
+            println!("pushing {:?}", data);
+        }
         self.data.push(data);
         self
     }
@@ -74,6 +77,7 @@ where
 
     fn debug(&mut self) -> &mut Self {
         self.debug = true;
+        println!("debug on");
         println!("{:?}",self.data);
         self
     }
@@ -166,7 +170,6 @@ where
 
 }
 
-
 #[cfg(test)]
 mod tests_i32_matrix {
     use crate::Numbers;
@@ -190,6 +193,26 @@ impl<T> Iterator for Numbers<T> where T: Clone {
             None
         }
     }
+}
+
+impl<T> Numbers <T>
+where
+    T: Copy + std::ops::RemAssign + std::fmt::Display + std::fmt::Debug
+{
+    //剰余計算
+    pub fn residue (&mut self, val: T) -> &mut Self {
+        for i in 0 .. self.data.len() {
+            for j in 0..self.data[0].len() {
+                self.data[i][j] %= val;
+            }
+        }
+        if self.debug {
+            println!("residue {} foreach", val);
+            println!("{:?}",self.data);
+        }
+        self
+    }
+
 }
 
 impl<T> TensorProcessor<T> for Numbers<T>

@@ -19,19 +19,23 @@ fn main(){
     ];
 
 
-    t.push(vec![1,1,1])
+    t
+        .debug()
+        .push(vec![1,1,1])
         .push(vec![1,7,2])
         .push(vec![5,2,3]);
 
     t.print();
 
-    t.debug()
+    t
         .add(5)
         .multiple(2)
         .substract(8)
         .divide(3)
         .multiple(13);
     t.replace_col(0,2);
+    t.residue(2);
+
     c.debug();
     c.replace_row(0,2);
     c.add(1.0).print();
