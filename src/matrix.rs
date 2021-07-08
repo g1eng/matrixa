@@ -18,14 +18,16 @@ pub trait Matrix {
     fn print(&self);
     fn replace_row(&mut self, src: usize, dst: usize) -> &mut Self;
     fn replace_col(&mut self, src: usize, dst: usize) -> &mut Self;
-    fn translate(&mut self) -> &mut Self;
+    fn transpose(&mut self) -> &mut Self;
     fn check_zero_len(&self);
+    fn debug(&mut self) -> &mut Self;
 }
 
 pub struct Numbers<T> {
     pub data: Vec<Vec<T>>,
     current: usize,
     max: usize,
+    debug: bool,
 }
 
 pub trait TensorProcessor<T> {
@@ -45,6 +47,7 @@ impl<T> Numbers<T> {
             data: v,
             current: 0,
             max: 0,
+            debug: false,
         }
     }
     pub fn push(&mut self, data: Vec<T>) -> &mut Self {
@@ -69,6 +72,12 @@ where
         println!("{:?}",self.data)
     }
 
+    fn debug(&mut self) -> &mut Self {
+        self.debug = true;
+        println!("{:?}",self.data);
+        self
+    }
+
     //行列サイズ確認
     // 長さ0で強制終了
     fn check_zero_len(&self) {
@@ -76,7 +85,6 @@ where
             panic!("zero matrix length detected");
         }
     }
-
 
     //行置換操作
     //
@@ -98,6 +106,10 @@ where
         }
         self.data[src] = dst_data;
         self.data[dst] = src_data;
+        if self.debug {
+            println!("matrix row replacement: {} with {}", src, dst );
+            println!("{:?}",self.data);
+        }
         self
     }
 
@@ -119,12 +131,16 @@ where
                 self.data[i][dst] = src_data;
             }
         }
+        if self.debug {
+            println!("matrix column replacement: {} with {}", src, dst );
+            println!("{:?}",self.data);
+        }
         self
 
     }
     // 転置
     //
-    fn translate (&mut self) -> &mut Self {
+    fn transpose (&mut self) -> &mut Self {
         if self.data.len() != self.data[0].len() {
             panic!("not a square matrix");
         }
@@ -139,6 +155,10 @@ where
                     self.data[j][i] = src;
                 }
             }
+        }
+        if self.debug {
+            println!("matrix transpose");
+            println!("{:?}",self.data);
         }
         self
    }
@@ -174,7 +194,7 @@ impl<T> Iterator for Numbers<T> where T: Clone {
 
 impl<T> TensorProcessor<T> for Numbers<T>
 where
-    T: Copy + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign + std::ops::Sub<Output=T> + std::ops::Mul<Output=T> 
+    T: Copy + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign + std::ops::Sub<Output=T> + std::ops::Mul<Output=T> + std::fmt::Display + std::fmt::Debug
 {
 
     //型Tにおけるゼロ値でデータを初期化
@@ -190,10 +210,15 @@ where
     //一括加算
     //
     fn add(&mut self, val: T) -> &mut Self {
+        //self.check_zero_len();
         for i in 0 .. self.data.len() {
             for j in 0..self.data[0].len() {
                 self.data[i][j] += val;
             }
+        }
+        if self.debug {
+            println!("add {} foreach", val);
+            println!("{:?}",self.data);
         }
         self
     }
@@ -201,10 +226,15 @@ where
     //一括減算
     //
     fn substract(&mut self, val: T) -> &mut Self {
+        //self.check_zero_len();
         for i in 0 .. self.data.len() {
             for j in 0..self.data[0].len() {
                 self.data[i][j] -= val;
             }
+        }
+        if self.debug {
+            println!("sub {} foreach", val);
+            println!("{:?}",self.data);
         }
         self
     }
@@ -218,16 +248,25 @@ where
                 self.data[i][j] *= val;
             }
         }
+        if self.debug {
+            println!("mul {} foreach", val);
+            println!("{:?}",self.data);
+        }
         self
     }
 
     //一括除算
     // (i32デフォルトでは端数切捨て)
     fn divide(&mut self, val: T) -> &mut Self {
+        //self.check_zero_len();
         for i in 0..self.data.len() {
             for j in 0..self.data[0].len() {
                 self.data[i][j] /= val;
             }
+        }
+        if self.debug {
+            println!("divide {} foreach", val);
+            println!("{:?}",self.data);
         }
         self
     }
@@ -286,6 +325,10 @@ where
         }
         //println!("by");
 
+        if self.debug {
+            println!("matrix multiple for m: {:?}", m.data);
+            println!("{:?}",self.data);
+        }
 
         self
     }
