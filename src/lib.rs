@@ -6,7 +6,7 @@ pub use self::matrix::{Matrix,Numbers};
 macro_rules! mat {
     ( $t:ty : $( [ $( $x:expr ),+ ] ),* ) => {
         {
-            let mut matrix = Numbers::new("i32");
+            let mut matrix: Numbers<$t> = Numbers::new();
             let mut vec_len = 0;
             let mut row = 0;
             $(

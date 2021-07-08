@@ -13,7 +13,6 @@
 //!  fm.print();
 //! ```
 //!
-//!
 
 pub trait Matrix {
     fn print(&self);
@@ -30,15 +29,17 @@ pub struct Numbers<T> {
 }
 
 pub trait TensorProcessor<T> {
+    fn zero(&mut self) -> &mut Self;
     fn add(&mut self, val: T) -> &mut Self;
     fn substract(&mut self, val: T) -> &mut Self;
     fn multiple(&mut self, val: T) -> &mut Self;
     fn divide(&mut self, val: T) -> &mut Self;
+    fn by(&mut self, val: Numbers<T>) -> &mut Self;
 }
 
 // + std::ops::{AddAssign,SubAssign,MulAssign,DivAssign}
 impl<T> Numbers<T> {
-    pub fn new(T: &str) -> Self {
+    pub fn new() -> Self {
         let v: Vec<Vec<T>> = Vec::new();
         Numbers {
             data: v,
@@ -58,63 +59,6 @@ impl<T> Numbers<T> {
         self.data.push(data);
         self
     }
-    //行列積
-    /*
-    fn by (&mut self, m: Numbers<T>) -> &mut Self {
-        m.check_zero_len();
-        if self.data.len() != m.data[0].len() {
-            panic!("row length not matched to the col length of argument")
-        } else if self.data[0].len() != m.data.len() {
-            panic!("col length not matched to the row length of argument")
-        }
-        //解行列のサイズ
-        let res_length: usize = self.data.len();
-        let mut res: Vec<Vec<T>> = Vec::new();
-
-        //解行列の初期化
-        while res.len() < res_length {
-            res.push(Vec::new());
-        }
-        for i in 0..res_length {
-            while res[i].len() < res_length {
-                res[i].push(0.0);
-            }
-        }
-        
-        //解行列の計算
-        for i in 0..self.data.len() {
-            for j in 0..m.data.len() {
-                for seq in 0..res_length {
-                    //println!("res[{}][{}] += self.data[{}][{}] + m.data[{}][{}] = {}", i, seq, seq, j, j, seq, self.data[seq][j] * m.data[j][seq]);
-                    res[i][seq] += self.data[i][j] * m.data[j][seq];
-                }
-            }
-        }
-
-        //println!("res: {:?}",res);
-
-        // self.data 行列のリサイズ
-        while self.data.len() < res_length {
-            self.data.push(Vec::new());
-        }
-        for i in 0..self.data.len() {
-            while self.data[i].len() > res_length {
-                self.data[i].pop();
-            }
-        }
-
-
-        //解行列のselfへの適用
-        for i in 0..res_length {
-            for j in 0..res_length {
-                self.data[i][j] = res[i][j];
-            }
-        }
-        //println!("by");
-        self
-    }
-    */
-
 }
 
 impl<T> Matrix for Numbers<T> 
@@ -230,8 +174,18 @@ impl<T> Iterator for Numbers<T> where T: Clone {
 
 impl<T> TensorProcessor<T> for Numbers<T>
 where
-    T: Copy + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign
+    T: Copy + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign + std::ops::Sub<Output=T> + std::ops::Mul<Output=T> 
 {
+
+    //型Tにおけるゼロ値でデータを初期化
+    fn zero(&mut self) -> &mut Self {
+        for i in 0..self.data.len(){
+            for j in 0..self.data[0].len(){
+                self.data[i][j] = self.data[i][j] - self.data[i][j];
+            }
+        }
+        self
+    }
 
     //一括加算
     //
@@ -278,4 +232,61 @@ where
         self
     }
 
+    //行列積
+    fn by (&mut self, m: Numbers<T>) -> &mut Self {
+        //m.check_zero_len();
+        if self.data.len() != m.data[0].len() {
+            panic!("row length not matched to the col length of argument")
+        } else if self.data[0].len() != m.data.len() {
+            panic!("col length not matched to the row length of argument")
+        }
+        //解行列のサイズ
+        let res_length: usize = self.data.len();
+        let mut res: Vec<Vec<T>> = Vec::new();
+
+        //解行列の初期化
+        while res.len() < res_length {
+            res.push(Vec::new());
+        }
+        for i in 0..res_length {
+            let mut j = 0;
+            while res[i].len() < res_length {
+                res[i].push( self.data[i][j] - self.data[i][j] );
+                j += 1;
+            }
+        }
+        
+        //解行列の計算
+        for i in 0..self.data.len() {
+            for j in 0..m.data.len() {
+                for seq in 0..res_length {
+                    //println!("res[{}][{}] += self.data[{}][{}] + m.data[{}][{}] = {}", i, seq, seq, j, j, seq, self.data[seq][j] * m.data[j][seq]);
+                    res[i][seq] += self.data[i][j] * m.data[j][seq];
+                }
+            }
+        }
+        //println!("res: {:?}",res);
+
+        // self.data 行列のリサイズ
+        while self.data.len() < res_length {
+            self.data.push(Vec::new());
+        }
+        for i in 0..self.data.len() {
+            while self.data[i].len() > res_length {
+                self.data[i].pop();
+            }
+        }
+
+
+        //解行列のselfへの適用
+        for i in 0..res_length {
+            for j in 0..res_length {
+                self.data[i][j] = res[i][j];
+            }
+        }
+        //println!("by");
+
+
+        self
+    }
 }

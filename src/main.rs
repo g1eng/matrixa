@@ -3,14 +3,14 @@ use tensors::matrix::{Matrix,TensorProcessor,Numbers};
 use tensors::mat;
 
 fn main(){
-    let mut c = Numbers::new("i32");
-    let mut t = Numbers::new("i32");
+    let mut c: Numbers<i32> = Numbers::new();
+    let mut t: Numbers<i32> = Numbers::new();
 
-    let mut m = Numbers::new("i32");
+    let mut m: Numbers<i32> = Numbers::new();
     let mut n = mat![
         i32:
-            [1,2],
-            [3,4]
+            [1,3],
+            [5,7]
     ];
 
 
@@ -50,5 +50,5 @@ fn main(){
     n
         .push(vec![10,10])
         .print();
-    //m.by(n).print();
+    m.by(n).print();
 }
