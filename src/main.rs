@@ -1,12 +1,17 @@
 //use std::path::PathBuf;
-use tensors::matrix::{Matrix,TensorProcessor,I32Matrix,F32Matrix};
+use tensors::matrix::{Matrix,TensorProcessor,Numbers};
+use tensors::mat;
 
 fn main(){
-    let mut c = I32Matrix::new();
-    let mut t = I32Matrix::new();
+    let mut c = Numbers::new("i32");
+    let mut t = Numbers::new("i32");
 
-    let mut m = I32Matrix::new();
-    let mut n = I32Matrix::new();
+    let mut m = Numbers::new("i32");
+    let mut n = mat![
+        i32:
+            [1,2],
+            [3,4]
+    ];
 
 
     t.push(vec![1,1,1])
@@ -31,7 +36,6 @@ fn main(){
         .substract(8)
         .divide(3)
         .multiple(13)
-        .residue(7)
         .print();
     t.replace_col(0,2).print();
     c.replace_row(0,2).print();
@@ -44,9 +48,7 @@ fn main(){
         .push(vec![4,5,7])
         .print();
     n
-        .push(vec![1,3])
-        .push(vec![5,7])
         .push(vec![10,10])
         .print();
-    m.by(n).print();
+    //m.by(n).print();
 }

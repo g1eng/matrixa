@@ -1,14 +1,38 @@
 pub mod matrix;
-pub use self::matrix::{Matrix,I32Matrix,F32Matrix};
+pub use self::matrix::{Matrix,Numbers};
 //pub use self::list::{DataList,StrList};
 
-pub struct I32TensorSet {
-    pub dataset: Vec<I32Matrix>,
+#[macro_export]
+macro_rules! mat {
+    ( $t:ty : $( [ $( $x:expr ),+ ] ),* ) => {
+        {
+            let mut matrix = Numbers::new("i32");
+            let mut vec_len = 0;
+            let mut row = 0;
+            $(
+                let mut t_vec = Vec::new();
+                $(
+                    t_vec.push($x);
+                )*
+                if vec_len == 0 {
+                    vec_len = t_vec.len();
+                } else if vec_len != t_vec.len() {
+                    panic!("invalid vector length for {:?} on row {}!", t_vec, row)
+                }
+                row += 1;
+                matrix.data.push(t_vec);
+            )*
+            matrix
+        }
+    };
+    ( $x:ty ) => {
+        {
+            Numbers::new($x)
+        }
+    };
 }
 
-pub struct F32TensorSet {
-    pub dataset: Vec<F32Matrix>,
-}
+
 
 pub trait TensorLinearOperator {
     fn add(&self);
