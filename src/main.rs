@@ -6,9 +6,9 @@ fn main(){
     let mut t = Numbers::<i32>::new();
     let mut c = mat![
         f32:
-            [1.2,3.4,5.6],
-            [7.8,9.10,10.11],
-            [12.345,67.89,0.0]
+            [1.2, 3.4, 3.4, 4.5],
+            [7.8, 9.10, 112.3, 456.78],
+            [12.345, 67.89, 0.0, 0.0]
     ];
 
     let mut m: Numbers<i32> = Numbers::new();
@@ -35,11 +35,12 @@ fn main(){
         .mul(13);
     t.col_replace(0,2);
     t.residue(2);
+    t.transpose().print();
 
     c.debug();
-    c.row_replace(0,2);
+    c.row_replace(0,1);
+    c.col_replace(0,3);
     c.add(1.0).print();
-    c.transpose().print();
 
     println!("by");
 
@@ -50,7 +51,7 @@ fn main(){
     n
         .push(vec![10,10])
         .print();
-    m.by(n).print();
+    m.prod(n).print();
 
     println!("{:?}", m.get());
 
@@ -59,7 +60,7 @@ fn main(){
             [1,3,5],
             [7,11,13],
             [17,19,23]
-    ].by(
+    ].prod(
         mat![
         i32:
             [29,31,37],
