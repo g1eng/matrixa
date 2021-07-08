@@ -33,11 +33,11 @@ fn main(){
         .substract(8)
         .divide(3)
         .multiple(13);
-    t.replace_col(0,2);
+    t.col_replace(0,2);
     t.residue(2);
 
     c.debug();
-    c.replace_row(0,2);
+    c.row_replace(0,2);
     c.add(1.0).print();
     c.transpose().print();
 

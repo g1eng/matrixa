@@ -22,8 +22,10 @@ pub trait Matrix<T> {
     fn set(&mut self, data: Vec<Vec<T>>);
     fn row(&self, num: usize) -> Vec<T>;
     fn col(&self, num: usize) -> Vec<T>;
-    fn replace_row(&mut self, src: usize, dst: usize) -> &mut Self;
-    fn replace_col(&mut self, src: usize, dst: usize) -> &mut Self;
+    fn row_len(&self) -> usize;
+    fn col_len(&self) -> usize;
+    fn row_replace(&mut self, src: usize, dst: usize) -> &mut Self;
+    fn col_replace(&mut self, src: usize, dst: usize) -> &mut Self;
     fn transpose(&mut self) -> &mut Self;
     fn check_integrity(&self);
     fn debug(&mut self) -> &mut Self;
@@ -31,8 +33,6 @@ pub trait Matrix<T> {
 
 pub struct Numbers<T> {
     data: Vec<Vec<T>>,
-    rows: usize,
-    cols: usize,
     current: usize,
     max: usize,
     debug: bool,
@@ -54,8 +54,6 @@ impl<T: std::fmt::Debug> Numbers<T> {
         Numbers {
             data: v,
             current: 0,
-            rows: 0,
-            cols: 0,
             max: 0,
             debug: false,
         }
@@ -63,18 +61,16 @@ impl<T: std::fmt::Debug> Numbers<T> {
     pub fn push(&mut self, data: Vec<T>) -> &mut Self {
         self.max += 1;
 
-        if self.rows != 0 {
+        if self.data.len() != 0 {
             if self.data[0].len() != data.len(){
-                panic!("Invalid vector length: {}, expected: {}",data.len(), self.rows);
+                panic!("Invalid vector length: {}, expected: {}",data.len(), self.data.len());
             }
         }
         if self.debug {
             println!("pushing {:?}", data);
         }
-        self.cols = data.len();
 
         self.data.push(data);
-        self.rows = self.data.len();
         self
     }
 }
@@ -114,12 +110,16 @@ where
 
     //行列サイズ確認
     // 長さ0で強制終了
+    //
     fn check_integrity(&self) {
         if self.data.len() == 0 {
             panic!("zero matrix length detected");
         }
     }
 
+    //行抽出関数
+    //Vec<T>として行を返却
+    //
     fn row(&self, num: usize) -> Vec<T> {
         self.check_integrity();
         if num >= self.data.len() {
@@ -133,6 +133,9 @@ where
         }
     }
 
+    //列抽出関数
+    //Vec<T>として列を返却
+    //
     fn col(&self, num: usize) -> Vec<T> {
         self.check_integrity();
         if num >= self.data[0].len() {
@@ -145,10 +148,22 @@ where
         res
     }
 
+    //行数表示関数
+    //
+    fn row_len(&self) -> usize {
+        self.data.len()
+    }
+
+    //列数表示関数
+    //
+    fn col_len(&self) -> usize {
+        self.check_integrity();
+        self.data[0].len()
+    }
 
     //行置換操作
     //
-    fn replace_row(&mut self, src: usize, dst: usize) -> &mut Self {
+    fn row_replace(&mut self, src: usize, dst: usize) -> &mut Self {
 
         if src >= self.data.len() {
             panic!("src address out of range {}", src);
@@ -170,12 +185,14 @@ where
             println!("matrix row replacement: {} with {}", src, dst );
             println!("{:?}",self.data);
         }
+        self.check_integrity();
+
         self
     }
 
     //列置換操作
     //
-    fn replace_col(&mut self, src: usize, dst: usize) -> &mut Self {
+    fn col_replace(&mut self, src: usize, dst: usize) -> &mut Self {
 
         if src >= self.data[0].len() {
             panic!("src address out of range {}", src);
@@ -508,6 +525,7 @@ mod tests_matrix {
     fn test_row(){
         let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
         assert_eq!(m.row(1)[2],4);
+        assert_eq!(m.row(0)[1],m.row(1)[0]);
     }
 
     #[test]
@@ -521,6 +539,19 @@ mod tests_matrix {
     fn test_col(){
         let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
         assert_eq!(m.col(1)[1],3);
+        assert_eq!(m.col(1)[2],m.col(3)[0]);
+    }
+
+    #[test]
+    fn test_row_len(){
+        let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        assert_eq!(m.row_len(),3);
+    }
+
+    #[test]
+    fn test_col_len(){
+        let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        assert_eq!(m.col_len(),5);
     }
 
     #[test]
@@ -530,7 +561,39 @@ mod tests_matrix {
         m.row(4);
     }
 
+    #[test]
+    fn test_row_replace(){
+        let mut m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        let p0 = vec![1,2,3,4,5];
+        let p2 = vec![3,4,5,6,7];
+        for i in 0..m.data[0].len(){
+            assert_eq!(m.data[0][i], p0[i]);
+            assert_eq!(m.data[2][i], p2[i]);
+        }
 
+        m.row_replace(0,2);
+        for i in 0..m.data[0].len(){
+            assert_eq!(m.data[0][i], p2[i]);
+            assert_eq!(m.data[2][i], p0[i]);
+        }
+    }
+
+    #[test]
+    fn test_col_replace(){
+        let mut m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        let p0 = vec![1,2,3];
+        let p2 = vec![3,4,5];
+        for i in 0..m.data.len(){
+            assert_eq!(m.data[i][0], p0[i]);
+            assert_eq!(m.data[i][2], p2[i]);
+        }
+
+        m.col_replace(0,2);
+        for i in 0..m.data.len(){
+            assert_eq!(m.data[i][0], p2[i]);
+            assert_eq!(m.data[i][2], p0[i]);
+        }
+    }
 }
 
 #[cfg(test)]
