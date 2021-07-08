@@ -79,20 +79,22 @@ impl<T: std::fmt::Debug> Numbers<T> {
 }
 
 
-// 行列インスンタンス初期化用マクロ
-//
-// ```rust
-// use tensors::matrix::{Matrix,TensorProcessor,Numbers};
-// use tensors::mat;
-//
-//  let mut fm = mat![f32: [1.0,2.0,3.0]];
-//  assert_eq!(im.data[0].len(), 5)
-//  assert_eq!(fm.data[0].len(), 3)
-//  assert_eq!(fm.data[0][2], 3.0)
-//
-//  im.print();
-//  fm.print();
-// ```
+/// 行列インスンタンス初期化用マクロ
+///
+/// ```rust
+/// use tensors::core::{Matrix,TensorProcessor,Numbers};
+/// use tensors::mat;
+///
+///  let mut im = mat![i32];
+///  let mut fm = mat![f32: [1.0,2.0,3.0]];
+///  assert_eq!(im.row_len(), 0);
+///  assert_eq!(fm.col_len(), 3);
+///  assert_eq!(fm.row(0)[2], 3.0);
+///
+///  im.print();
+///  fm.print();
+/// ```
+
 #[macro_export]
 macro_rules! mat {
     ( $t:ty : $( [ $( $x:expr ),+ ] ),* ) => {
@@ -288,18 +290,30 @@ where
     // 転置
     //
     fn transpose (&mut self) -> &mut Self {
-        let limit = self.data.len() / 2;
+        self.integrity_check();
 
-        for i in 0..self.data.len() {
-            for j in 0..self.data[0].len() {
-                if i<=limit && j >= limit {
-                    let src = self.data[i][j];
-                    let dst = self.data[j][i];
-                    self.data[i][j] = dst;
-                    self.data[j][i] = src;
-                }
+        let mut res: Vec<Vec<T>> = Vec::new();
+        let col_len = self.data[0].len();
+        for i in 0..col_len {
+            res.push(Vec::new());
+            let col = self.col(i);
+            for j in 0..self.data.len() {
+                res[i].push(col[j]);
+            }
+            if self.debug {
+                println!("res[{}]: {:?}",i, res[i]);
             }
         }
+        while self.data.len() != 0 {
+            self.data.pop();
+        }
+        for i in 0..col_len {
+            self.data.push(Vec::new());
+            for j in 0..res[0].len() {
+                self.data[i].push(res[i][j]);
+            }
+        }
+
         if self.debug {
             println!("matrix transpose");
             println!("{:?}",self.data);
@@ -717,6 +731,49 @@ mod tests_matrix {
             assert_eq!(m.data[i][2], p0[i]);
         }
     }
+
+    #[test]
+    fn test_transpose(){
+        let mut m = mat![i32: [1,2,3], [3,4,5],[5,6,7]];
+        let res = mat![
+            i32:
+                [1,3,5],
+                [2,4,6],
+                [3,5,7]
+        ];
+        m.transpose();
+        for i in 0..m.data.len(){
+            for j in 0..m.data[0].len(){
+                assert_eq!(m.data[i][j], res.data[i][j]);
+            }
+        }
+
+    }
+
+
+    #[test]
+    fn test_transpose_rect(){
+        let mut m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        assert_eq!(m.data.len(),3);
+        assert_eq!(m.data[0].len(),5);
+        let res = mat![
+            i32:
+                [1,2,3],
+                [2,3,4],
+                [3,4,5],
+                [4,5,6],
+                [5,6,7]
+        ];
+        m.transpose();
+        assert_eq!(m.data.len(),5);
+        assert_eq!(m.data[0].len(),3);
+        for i in 0..m.data.len(){
+            for j in 0..m.data[0].len(){
+                assert_eq!(m.data[i][j], res.data[i][j]);
+            }
+        }
+
+    }
 }
 
 #[cfg(test)]
@@ -904,5 +961,16 @@ mod tests_processor {
         assert_eq!(m.determinant(),3.0);
     }
 
+    #[test]
+    #[should_panic]
+    fn test_determinant_3x2_error(){
+        let m = mat![
+            i32:
+                [1,2],
+                [0,1],
+                [1,1]
+        ];
+        m.determinant();
+    }
 
 }
