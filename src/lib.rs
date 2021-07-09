@@ -1,2 +1,2 @@
 pub mod core;
-pub use self::core::{List,Matrix};
+use crate::core::{List,Matrix};

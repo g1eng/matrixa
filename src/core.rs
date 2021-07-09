@@ -1012,7 +1012,7 @@ where
     /// オブジェクト参照を返却する。
     ///
     /// ```rust
-    /// use tensors::{List,Matrix};
+    /// use tensors::core::{List,Matrix};
     /// use tensors::mat;
     ///
     /// let r = mat![i32:[1,2],[3,4]];
