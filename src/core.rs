@@ -21,19 +21,24 @@
 //! ```
 //!
 
+use std::ops::{Add,Sub,Mul};
+
 pub trait Matrix<T> {
     fn print(&self);
     fn get(&self) -> &Vec<Vec<T>>;
     fn set(&mut self, data: Vec<Vec<T>>);
+    //fn resize(mut &self) -> Result<&Self, &str>;
     fn row(&self, num: usize) -> Vec<T>;
     fn col(&self, num: usize) -> Vec<T>;
     fn is_square(&self) -> Result<&Self, &str>;
     fn rows(&self) -> usize;
     fn cols(&self) -> usize;
-    fn row_replace(&mut self, src: usize, dst: usize) -> &mut Self;
-    fn col_replace(&mut self, src: usize, dst: usize) -> &mut Self;
+    fn row_replace(&mut self, src: usize, dst: usize) -> Result<&mut Self, &str>;
+    fn col_replace(&mut self, src: usize, dst: usize) -> Result<&mut Self, &str>;
     fn transpose(&mut self) -> &mut Self;
     fn integrity_check(&self) -> Result<&Self, &str>;
+    fn row_check(&self, row: usize) -> Result<&Self, &str>;
+    fn col_check(&self, col: usize) -> Result<&Self, &str>;
     fn range_check(&self, row: usize, col: usize) -> Result<&Self, &str>;
     fn debug(&mut self) -> &mut Self;
 }
@@ -53,12 +58,12 @@ pub trait TensorProcessor<T> {
     fn mul(&mut self, val: T) -> &mut Self;
     fn div(&mut self, val: T) -> &mut Self;
     fn prod(&self, val: Numbers<T>) -> Result<Numbers<T>,&str>;
+    fn hadamard (&self, m: Numbers<T>) -> Result<Numbers<T>,&str>;
     fn determinant(&self) -> T;
     fn adjugate(&self, p: usize, q: usize) -> Result<Numbers<T>,&str>;
     fn is_regular(&self) -> Result<&Self, &str>;
 }
 
-// + std::ops::{AddAssign,SubAssign,MulAssign,DivAssign}
 impl<T: std::fmt::Debug> Numbers<T> {
     pub fn new() -> Self {
         let v: Vec<Vec<T>> = Vec::new();
@@ -94,7 +99,7 @@ impl<T: std::fmt::Debug> Numbers<T> {
 /// use tensors::mat;
 ///
 ///  let mut im = mat![i32];
-///  let mut fm = mat![
+///  let fm = mat![
 ///     f32: 
 ///         [1.0,2.0,3.0]
 ///  ];
@@ -112,7 +117,6 @@ macro_rules! mat {
         {
             let mut matrix: Numbers<$t> = Numbers::new();
             let mut vec_len = 0;
-            let mut row = 0;
             $(
                 let mut t_vec = Vec::new();
                 $(
@@ -121,9 +125,8 @@ macro_rules! mat {
                 if vec_len == 0 {
                     vec_len = t_vec.len();
                 } else if vec_len != t_vec.len() {
-                    panic!("invalid vector length for {:?} on row {}!", t_vec, row)
+                    panic!("invalid vector length for {:?}!", t_vec)
                 }
-                row += 1;
                 matrix.push(t_vec);
             )*
             matrix
@@ -135,6 +138,134 @@ macro_rules! mat {
         }
     };
 }
+
+/*
+impl<T: Copy> Copy for Numbers<T> {}
+impl<T: Clone> Clone for Numbers<T> {
+    fn clone(&self) -> Numbers<T> {
+        *self
+    }
+}*/
+
+impl<T: std::ops::Add<Output=T> + std::ops::Sub<Output=T> > Add for Numbers<T>
+where
+    T: Copy + std::ops::Add<Output=T> + std::ops::Sub<Output=T>
+{
+    type Output = Self;
+    fn add(self, other: Self) -> Self {
+        if self.data.len() == 0 {
+            panic!("zero length origin for addition");
+        } else if other.data.len() == 0 {
+            panic!("zero length company for addition");
+        } else if self.data.len() != other.data.len() {
+            panic!("row number not matched for addition: {}, {}",self.data.len(), other.data.len());
+        } else if self.data[0].len() != other.data[0].len() {
+            panic!("row number not matched for addition");
+        }
+
+        let zero = self.data[0][0]-self.data[0][0];
+        let mut res = Vec::new();
+        for i in 0..self.data.len() {
+            if i >= res.len() {
+                res.push(Vec::new());
+            }
+            for j in 0..self.data[0].len() {
+                res[i].push(zero);
+                res[i][j] = self.data[i][j] + other.data[i][j];
+            }
+        }
+        Self {
+            data: res,
+            current: 0,
+            max: 0,
+            debug: self.debug,
+        }
+    }
+}
+
+impl<T: std::ops::Add<Output=T> + std::ops::Sub<Output=T> > Sub for Numbers<T>
+where
+    T: Copy + std::ops::Add<Output=T> + std::ops::Sub<Output=T>
+{
+    type Output = Self;
+    fn sub(self, other: Self) -> Self {
+        if self.data.len() == 0 {
+            panic!("zero length origin for addition");
+        } else if other.data.len() == 0 {
+            panic!("zero length company for addition");
+        } else if self.data.len() != other.data.len() {
+            panic!("row number not matched for addition: {}, {}",self.data.len(), other.data.len());
+        } else if self.data[0].len() != other.data[0].len() {
+            panic!("row number not matched for addition");
+        }
+
+        let zero = self.data[0][0]-self.data[0][0];
+        let mut res = Vec::new();
+        for i in 0..self.data.len() {
+            if i >= res.len() {
+                res.push(Vec::new());
+            }
+            for j in 0..self.data[0].len() {
+                res[i].push(zero);
+                res[i][j] = self.data[i][j] - other.data[i][j];
+            }
+        }
+        Self {
+            data: res,
+            current: 0,
+            max: 0,
+            debug: self.debug,
+        }
+    }
+}
+
+
+impl<T: std::ops::Mul<Output=T> + std::ops::Sub<Output=T> + std::ops::AddAssign + std::fmt::Debug > Mul for Numbers<T>
+where
+    T: Copy + std::ops::Mul<Output=T> + std::ops::Sub<Output=T> + std::ops::AddAssign + std::fmt::Debug
+{
+    type Output = Self;
+
+    fn mul(self, m: Self) -> Self {
+
+        self.integrity_check().unwrap();
+        m.integrity_check().unwrap();
+
+        if self.data.len() != m.data[0].len() {
+            panic!("row length of origin {} is not matched to the column length of the company {}",self.data.len(), m.data[0].len())
+        } else if self.data[0].len() != m.data.len() {
+            panic!("column length of origin {} is not matched to the row length of the company {}",self.data[0].len(), m.data.len())
+        }
+        //解行列のサイズ
+        let res_length: usize = self.data.len();
+
+        let mut res: Self = mat![T];
+        let zero = self.data[0][0] - self.data[0][0];
+
+        //解行列の計算
+        for i in 0..self.data.len() {
+            for j in 0..m.data.len() {
+                for seq in 0..res_length {
+                    if i >= res.data.len() {
+                        res.data.push(Vec::new());
+                    }
+                    if seq >= res.data[i].len() {
+                        res.data[i].push(zero);
+                    }
+                    if self.debug {
+                        println!("i: {}, j: {}, seq: {}, where res.data is {:?}",i,j,seq, res.data);
+                    }
+                    res.data[i][seq] += self.data[i][j] * m.data[j][seq];
+                }
+            }
+        }
+
+        res
+
+    }
+}
+
+
 
 
 // [数値行列用] 基本メソッド群
@@ -170,6 +301,19 @@ where
         }
     }
 
+    /// 行列サイズ変更
+    /// usize型で行x列サイズを指定し、selfのデータサイズを変更する。
+    /// サイズが縮小する行・列についてはデータを破棄し、
+    /// サイズが拡大する行・列についてはゼロ値で充填する。
+    ///
+
+    /*
+    fn resize(mut &self) -> Result<&Self, &str> {
+
+        if self.debug {
+        }
+    }*/
+
     /// デバッガ
     /// デバッグフラグを有効化したインスタンスを返す。
     ///
@@ -196,13 +340,36 @@ where
         Ok(&self)
     }
 
-    fn range_check(&self, row: usize, col: usize) -> Result<&Self, &str> {
-        if row >= self.data.len() {
-            return Err("row is out of order")
-        } else if col >= self.data[0].len() {
-            return Err("col is out of order")
+    /// 行の存在性検証
+    /// 行の値をusizeで指定し、行列の高さに収まるかどうかを検証。
+    /// 結果をResultにくるんだオブジェクト参照として返却
+    ///
+    fn row_check(&self, row: usize) -> Result<&Self, &str> {
+        match row < self.data.len() {
+            true => Ok(&self),
+            false => Err("row is out of order"),
+            _ => panic!("unconditional row check error"),
         }
-        Ok(&self)
+    }
+
+    /// 列の存在性検証
+    /// 列の値をusizeで指定し、行列の幅に収まるかどうかを検証。
+    /// 結果をResultにくるんだオブジェクト参照として返却
+    ///
+    fn col_check(&self, row: usize) -> Result<&Self, &str> {
+        match row < self.data.len() {
+            true => Ok(&self),
+            false => Err("column is out of order"),
+            _ => panic!("unconditional row check error"),
+        }
+    }
+
+    /// 行・列の存在性検証
+    /// 行および列の値をusizeで指定し、行列の幅・高さに収まるかどうかを検証。
+    /// 結果をResultにくるんだオブジェクト参照として返却
+    ///
+    fn range_check(&self, row: usize, col: usize) -> Result<&Self, &str> {
+        self.row_check(row)?.col_check(col)
     }
 
     /// 行抽出関数
@@ -226,9 +393,6 @@ where
     ///
     fn col(&self, num: usize) -> Vec<T> {
         self.integrity_check().unwrap();
-        if num >= self.data[0].len() {
-            panic!("colum number {} is out of order: must be less than {}",num, self.data[0].len());
-        }
         let mut res: Vec<T> = Vec::new();
         for i in 0..self.data.len() {
             res.push(self.data[i][num]);
@@ -274,14 +438,13 @@ where
 
     //行置換操作
     //
-    fn row_replace(&mut self, src: usize, dst: usize) -> &mut Self {
+    fn row_replace(&mut self, src: usize, dst: usize) -> Result<&mut Self, &str> {
+        self.integrity_check().expect("data corrupted before row replacement");
 
-        if src >= self.data.len() {
-            panic!("src address out of range {}", src);
-        } else if dst >= self.data.len() {
-            panic!("dst address out of range {}", dst);
-        }
-
+        self.row_check(src)
+            .expect("src row is out of order for the replacement")
+            .row_check(dst)
+            .expect("dst row is out of order for the replacement");
 
         let mut src_data = Vec::new();
         let mut dst_data = Vec::new();
@@ -296,21 +459,21 @@ where
             println!("matrix row replacement: {} with {}", src, dst );
             println!("{:?}",self.data);
         }
-        self.integrity_check().unwrap();
 
-        self
+        self.integrity_check().expect("data corrupted after row replacement");
+
+        Ok(self)
     }
 
     //列置換操作
     //
-    fn col_replace(&mut self, src: usize, dst: usize) -> &mut Self {
-        self.integrity_check().unwrap();
+    fn col_replace(&mut self, src: usize, dst: usize) -> Result<&mut Self, &str> {
+        self.integrity_check().expect("data corrupted before row replacement");
 
-        if src >= self.data[0].len() {
-            panic!("src address out of range {}", src);
-        } else if dst >= self.data[0].len() {
-            panic!("dst address out of range {}", dst);
-        }
+        self.row_check(src)
+            .expect("src column is out of order for the replacement")
+            .row_check(dst)
+            .expect("dst column is out of order for the replacement");
 
         for i in 0..self.data.len() {
             println!("col_rep try for row[{}]: {:?}", i, self.data[i] );
@@ -322,8 +485,9 @@ where
             println!("matrix column replacement: {} with {}", src, dst );
             println!("{:?}",self.data);
         }
-        self
+        self.integrity_check().expect("data corrupted after row replacement");
 
+        Ok(self)
     }
 
 	/// 転置
@@ -514,8 +678,11 @@ where
 
     /// 行列乗算 
     /// 引数として与えられた同一型の行列インスタンスを用いて 
-    /// self.data を元とする行列の積を計算し、 データ更新後の
-    /// オブジェクト参照を返却する。
+    /// self.data を元とする行列の積を計算し、Result型に格納した
+    /// 新規インスタンスを返却する。
+    /// std::ops::Mul を実装した * 演算子を用いて同様の計算が可能だが、
+    /// * 演算子を用いる場合は演算不能な場合にパニックする。prod関数
+    /// を用いる場合はResult型を通じたエラー制御が可能。
     ///
     /// ```rust
     /// use tensors::core::{Matrix,TensorProcessor,Numbers};
@@ -583,6 +750,33 @@ where
         }
 
         //println!("res: {:?}",res);
+        Ok(res)
+    }
+
+    /// アダマール積
+    /// 行列の要素ごとの積(element-wize or pointwise product)を求め、
+    /// Result型に格納した新規インスタンスを返却する。
+    ///
+    ///
+    fn hadamard (&self, m: Numbers<T>) -> Result<Numbers<T>,&str> {
+        self.integrity_check()
+            .expect("origin matrix corrupted for hadamard product");
+        m.integrity_check()
+            .expect("origin matrix corrupted for hadamard product");
+
+        let zero = self.zero();
+        let mut res: Numbers<T> = mat![T];
+
+        for i in 0..self.rows() {
+            if i >= res.rows() {
+                res.data.push(Vec::new());
+            }
+            for j in 0..self.cols() {
+                res.data[i].push(zero);
+                res.data[i][j] = self.data[i][j] * m.data[i][j];
+            }
+        }
+
         Ok(res)
     }
 
@@ -726,14 +920,14 @@ mod tests_matrix {
 
     #[test]
     fn test_macro_with_type(){
-        let mut m = mat![f32];
+        let m = mat![f32];
         assert_eq!(m.data.len(), 0);
         //m.data.push(vec![1.234,5.678]);
     }
 
     #[test]
     fn test_macro_with_values(){
-        let mut m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+        let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
         assert_eq!(m.data.len(), 3);
         assert_eq!(m.data[0].len(), 5);
         assert_eq!(m.data[2][2], 5);
@@ -769,7 +963,7 @@ mod tests_matrix {
     #[should_panic]
     //ゼロ値でパニック
     fn test_integrity_error_zero(){
-        let mut m = Numbers::<i32>::new();
+        let m = Numbers::<i32>::new();
         m.integrity_check().unwrap();
     }
 
@@ -945,7 +1139,7 @@ mod tests_processor {
     #[test]
     #[should_panic]
     fn test_prod_error_unmatched(){
-        let mut m = mat![
+        let m = mat![
             i32:
                 [1,2,3],
                 [4,5,7]
@@ -961,7 +1155,7 @@ mod tests_processor {
     #[test]
     #[should_panic]
     fn test_prod_error_zero(){
-        let mut m = mat![
+        let m = mat![
             i32:
                 [1,2,3],
                 [4,5,7]
