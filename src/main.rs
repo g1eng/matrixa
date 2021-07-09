@@ -1,9 +1,9 @@
 //use std::path::PathBuf;
-use tensors::core::{Matrix,TensorProcessor,Numbers};
+use tensors::core::{List,Matrix};
 use tensors::mat;
 
 fn main(){
-    let mut t = Numbers::<i32>::new();
+    let mut t = Matrix::<i32>::new();
     let mut c = mat![
         f32:
             [1.2, 3.4, 3.4, 4.5],
@@ -11,7 +11,7 @@ fn main(){
             [12.345, 67.89, 0.0, 0.0]
     ];
 
-    let mut m: Numbers<i32> = Numbers::new();
+    let mut m: Matrix<i32> = Matrix::new();
     let mut n = mat![
         i32:
             [1,3],
@@ -45,8 +45,11 @@ fn main(){
     t
         .debug()
         .push(vec![1,1,1])
+        .unwrap()
         .push(vec![1,7,2])
-        .push(vec![5,2,3]);
+        .unwrap()
+        .push(vec![5,2,3])
+        .unwrap();
 
     t.print();
 
@@ -74,14 +77,17 @@ fn main(){
 
     m
         .push(vec![1,2,3])
+        .unwrap()
         .push(vec![4,5,7])
+        .unwrap()
         .print();
     n
         .push(vec![10,10])
+        .unwrap()
         .print();
     //m.prod(n).unwrap().print();
 
-    println!("{:?}", m.get());
+    println!("{:?}", m.dump());
 
     mat![
         i32:

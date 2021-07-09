@@ -1,2 +1,2 @@
 pub mod core;
-pub use self::core::{Matrix,Numbers,TensorProcessor};
+pub use self::core::{List,Matrix};
