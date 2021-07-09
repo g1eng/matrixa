@@ -57,6 +57,7 @@ pub trait TensorProcessor<T> {
     fn sub(&mut self, val: T) -> &mut Self;
     fn mul(&mut self, val: T) -> &mut Self;
     fn div(&mut self, val: T) -> &mut Self;
+    fn copy(&self) -> Numbers<T>;
     fn prod(&self, val: Numbers<T>) -> Result<Numbers<T>,&str>;
     fn hadamard (&self, m: Numbers<T>) -> Result<Numbers<T>,&str>;
     fn determinant(&self) -> T;
@@ -138,14 +139,6 @@ macro_rules! mat {
         }
     };
 }
-
-/*
-impl<T: Copy> Copy for Numbers<T> {}
-impl<T: Clone> Clone for Numbers<T> {
-    fn clone(&self) -> Numbers<T> {
-        *self
-    }
-}*/
 
 impl<T: std::ops::Add<Output=T> + std::ops::Sub<Output=T> > Add for Numbers<T>
 where
@@ -266,8 +259,6 @@ where
 }
 
 
-
-
 // [数値行列用] 基本メソッド群
 impl<T> Matrix <T> for Numbers<T> 
 where
@@ -306,7 +297,6 @@ where
     /// サイズが縮小する行・列についてはデータを破棄し、
     /// サイズが拡大する行・列についてはゼロ値で充填する。
     ///
-
     /*
     fn resize(mut &self) -> Result<&Self, &str> {
 
@@ -342,7 +332,7 @@ where
 
     /// 行の存在性検証
     /// 行の値をusizeで指定し、行列の高さに収まるかどうかを検証。
-    /// 結果をResultにくるんだオブジェクト参照として返却
+    /// 結果をResult型にオブジェクト参照を格納して返却
     ///
     fn row_check(&self, row: usize) -> Result<&Self, &str> {
         match row < self.data.len() {
@@ -354,7 +344,7 @@ where
 
     /// 列の存在性検証
     /// 列の値をusizeで指定し、行列の幅に収まるかどうかを検証。
-    /// 結果をResultにくるんだオブジェクト参照として返却
+    /// 結果をResult型にオブジェクト参照を格納して返却
     ///
     fn col_check(&self, row: usize) -> Result<&Self, &str> {
         match row < self.data.len() {
@@ -366,7 +356,7 @@ where
 
     /// 行・列の存在性検証
     /// 行および列の値をusizeで指定し、行列の幅・高さに収まるかどうかを検証。
-    /// 結果をResultにくるんだオブジェクト参照として返却
+    /// 結果をResult型にオブジェクト参照を格納して返却
     ///
     fn range_check(&self, row: usize, col: usize) -> Result<&Self, &str> {
         self.row_check(row)?.col_check(col)
@@ -401,13 +391,13 @@ where
     }
 
     /// 行数表示関数
-    //
+    ///
     fn rows(&self) -> usize {
         self.data.len()
     }
 
-    //列数表示関数
-    //
+    /// 列数表示関数
+    ///
     fn cols(&self) -> usize {
         if self.data.len() == 0 {
             0
@@ -418,16 +408,17 @@ where
 
     /// 正方行列判定
     ///
-    /// 正方行列であるかどうかを判定し、Result型にくるんでオブジェクト参照を
+    /// 正方行列であるかどうかを判定し、Result型格納したオブジェクト参照を
     /// 返却する
     ///
     /// ```rust
     /// use tensors::core::{Matrix,TensorProcessor,Numbers};
     /// use tensors::mat;
+    ///
     /// let m = mat![i32: [1,2,3], [2,3,4],[3,4,5]];
     /// m.is_square().unwrap();
     /// ```
-
+    ///
     fn is_square(&self) -> Result<&Self, &str> {
         if self.data.len() != self.data[0].len() {
             Err("not a square matrix")
@@ -436,8 +427,8 @@ where
         }
     }
 
-    //行置換操作
-    //
+    /// 行置換操作
+    ///
     fn row_replace(&mut self, src: usize, dst: usize) -> Result<&mut Self, &str> {
         self.integrity_check().expect("data corrupted before row replacement");
 
@@ -465,8 +456,8 @@ where
         Ok(self)
     }
 
-    //列置換操作
-    //
+    /// 列置換操作
+    ///
     fn col_replace(&mut self, src: usize, dst: usize) -> Result<&mut Self, &str> {
         self.integrity_check().expect("data corrupted before row replacement");
 
@@ -571,9 +562,9 @@ impl<T> Numbers <T>
 where
     T: Copy + std::ops::RemAssign + std::fmt::Display + std::fmt::Debug
 {
-    //剰余計算
-    //int系の型のみサポート
-    //
+    /// スカラー剰余計算
+    /// int系の型のみサポート
+    ///
     pub fn residue (&mut self, val: T) -> &mut Self {
         for i in 0 .. self.data.len() {
             for j in 0..self.data[0].len() {
@@ -596,6 +587,7 @@ where
 {
 
     /// ゼロ値取得関数
+    ///
     fn zero(&self) -> T {
         self.data[0][0] - self.data[0][0]
     }
@@ -662,6 +654,7 @@ where
 
     /// スカラー除算
     /// (i32では端数切捨て)
+    ///
     fn div(&mut self, val: T) -> &mut Self {
         self.integrity_check().unwrap();
         for i in 0..self.data.len() {
@@ -676,7 +669,49 @@ where
         self
     }
 
-    /// 行列乗算 
+
+    /// 複製
+    /// selfと同一のデータを有する新規インスタンスを生成する。
+    /// Numbers構造体のデータはVec<VeC<T>>であるため、Copyを実装しない。
+    /// そのためselfのデータを利用して各種操作を行うためには、所有権の移転
+    /// が発生しない新規インスタンスを生成するのが便利だ。
+    ///
+    /// ```rust
+    /// use tensors::core::{Matrix,TensorProcessor,Numbers};
+    /// use tensors::mat;
+    ///
+    /// let x = mat![i32:[1,2,3],[1,5,6]];
+    /// let y = x.copy();
+    ///
+    /// for i in 0..y.rows() {
+    ///     for j in 0..y.cols() {
+    ///         assert_eq!(y.row(i)[j], x.row(i)[j]);
+    ///     }
+    /// }
+    ///
+    /// // xはxを所有しており、この時点でも自身のデータにアクセスできる
+    /// x.print();
+    ///
+    /// ```
+    ///
+    fn copy(&self) -> Numbers<T> {
+
+        let mut res = mat![T];
+        let zero = self.zero();
+
+        for i in 0..self.rows() {
+            if i >= res.rows() {
+                res.data.push(Vec::new());
+            }
+            for j in 0..self.cols() {
+                res.data[i].push(zero);
+                res.data[i][j] = self.data[i][j];
+            }
+        }
+        res
+    }
+
+    /// 積
     /// 引数として与えられた同一型の行列インスタンスを用いて 
     /// self.data を元とする行列の積を計算し、Result型に格納した
     /// 新規インスタンスを返却する。
@@ -715,7 +750,6 @@ where
     ///     }
     /// }
     /// ```
-
     fn prod (&self, m: Numbers<T>) -> Result<Numbers<T>,&str> {
         self.integrity_check().unwrap();
         m.integrity_check().unwrap();
@@ -725,38 +759,40 @@ where
         } else if self.data[0].len() != m.data.len() {
             return Err("col length not matched to the row length of argument")
         }
-        //解行列のサイズ
-        let res_length: usize = self.data.len();
 
-        let mut res: Numbers<T> = mat![T];
-
-        //解行列の計算
-        for i in 0..self.data.len() {
-            for j in 0..m.data.len() {
-                for seq in 0..res_length {
-                    //println!("res[{}][{}] += self.data[{}][{}] + m.data[{}][{}] = {}", i, seq, seq, j, j, seq, self.data[seq][j] * m.data[j][seq]);
-                    if i >= res.rows() {
-                        res.data.push(Vec::new());
-                    }
-                    if seq >= res.data[i].len() {
-                        res.data[i].push(self.zero());
-                    }
-                    if self.debug {
-                        println!("i: {}, j: {}, seq: {}, where res.data is {:?}",i,j,seq, res.data);
-                    }
-                    res.data[i][seq] += self.data[i][j] * m.data[j][seq];
-                }
-            }
-        }
-
-        //println!("res: {:?}",res);
-        Ok(res)
+        Ok(self.copy() * m)
     }
 
     /// アダマール積
     /// 行列の要素ごとの積(element-wize or pointwise product)を求め、
     /// Result型に格納した新規インスタンスを返却する。
     ///
+    /// ```rust
+    /// use tensors::core::{Matrix,TensorProcessor,Numbers};
+    /// use tensors::mat;
+    /// let m = mat![
+    ///     i32:
+    ///         [1,2],
+    ///         [4,5]
+    /// ];
+    ///
+    /// let n = mat![
+    ///     i32:
+    ///         [1,-2],
+    ///         [-3,4]
+    /// ];
+    /// let res = mat![
+    ///     i32:
+    ///         [1,-4],
+    ///         [-12,20]
+    /// ];
+    /// let p = m.hadamard(n).unwrap();
+    /// for i in 0..p.rows() {
+    ///     for j in 0..p.cols() {
+    ///         assert_eq!(p.get()[i][j], res.get()[i][j]);
+    ///     }
+    /// }
+    /// ```
     ///
     fn hadamard (&self, m: Numbers<T>) -> Result<Numbers<T>,&str> {
         self.integrity_check()
@@ -810,7 +846,6 @@ where
     /// }
     /// ```
     ///
-
     fn adjugate(&self, p: usize, q: usize) -> Result<Numbers<T>,&str> {
         self.integrity_check().unwrap();
         self.range_check(p,q).unwrap();
@@ -858,7 +893,6 @@ where
     /// assert_eq!(m.determinant(),80);
     /// ```
     ///
-
     fn determinant(&self) -> T {
         self.integrity_check().unwrap();
         self.is_square().unwrap();
