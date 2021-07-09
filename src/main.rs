@@ -51,7 +51,7 @@ fn main(){
     n
         .push(vec![10,10])
         .print();
-    m.prod(n).print();
+    m.prod(n).unwrap().print();
 
     println!("{:?}", m.get());
 
@@ -67,5 +67,5 @@ fn main(){
             [39,41,43],
             [47,53,59]
         ]
-    ).print();
+    ).unwrap().print();
 }

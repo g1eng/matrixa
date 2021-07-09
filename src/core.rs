@@ -1,5 +1,10 @@
-//! Tensors::Matrix is a struct for matrices manipulation.
-//! 
+//! Tensors is a simple matrix manipulation library which supports
+//! row and column matrix manipulations, scalar manipulation, 
+//! mathematical manipulation, filtering and parsing mechanisms for
+//! various type of data stored in vector of vector (Vec<Vec<T>>).
+//!
+//! すべての行列で可能な演算については値ないしは参照そのものを返却し、
+//! 行列と引数によっては演算が定義されないものについてResult型を返却する。
 //!
 //! ```rust
 //! use tensors::core::{Matrix,TensorProcessor,Numbers};
@@ -23,12 +28,13 @@ pub trait Matrix<T> {
     fn row(&self, num: usize) -> Vec<T>;
     fn col(&self, num: usize) -> Vec<T>;
     fn is_square(&self) -> Result<&Self, &str>;
-    fn row_len(&self) -> usize;
-    fn col_len(&self) -> usize;
+    fn rows(&self) -> usize;
+    fn cols(&self) -> usize;
     fn row_replace(&mut self, src: usize, dst: usize) -> &mut Self;
     fn col_replace(&mut self, src: usize, dst: usize) -> &mut Self;
     fn transpose(&mut self) -> &mut Self;
-    fn integrity_check(&self);
+    fn integrity_check(&self) -> Result<&Self, &str>;
+    fn range_check(&self, row: usize, col: usize) -> Result<&Self, &str>;
     fn debug(&mut self) -> &mut Self;
 }
 
@@ -40,14 +46,16 @@ pub struct Numbers<T> {
 }
 
 pub trait TensorProcessor<T> {
-    fn zero(&mut self) -> &mut Self;
+    fn fill_zero(&mut self) -> &mut Self;
+    fn zero(&self) -> T;
     fn add(&mut self, val: T) -> &mut Self;
     fn sub(&mut self, val: T) -> &mut Self;
     fn mul(&mut self, val: T) -> &mut Self;
     fn div(&mut self, val: T) -> &mut Self;
-    fn prod(&mut self, val: Numbers<T>) -> &mut Self;
+    fn prod(&self, val: Numbers<T>) -> Result<Numbers<T>,&str>;
     fn determinant(&self) -> T;
     fn adjugate(&self, p: usize, q: usize) -> Result<Numbers<T>,&str>;
+    fn is_regular(&self) -> Result<&Self, &str>;
 }
 
 // + std::ops::{AddAssign,SubAssign,MulAssign,DivAssign}
@@ -86,9 +94,12 @@ impl<T: std::fmt::Debug> Numbers<T> {
 /// use tensors::mat;
 ///
 ///  let mut im = mat![i32];
-///  let mut fm = mat![f32: [1.0,2.0,3.0]];
-///  assert_eq!(im.row_len(), 0);
-///  assert_eq!(fm.col_len(), 3);
+///  let mut fm = mat![
+///     f32: 
+///         [1.0,2.0,3.0]
+///  ];
+///  assert_eq!(im.rows(), 0);
+///  assert_eq!(fm.cols(), 3);
 ///  assert_eq!(fm.row(0)[2], 3.0);
 ///
 ///  im.print();
@@ -131,18 +142,20 @@ impl<T> Matrix <T> for Numbers<T>
 where
     T: std::fmt::Debug + Copy
 {
+    /// データ表示関数
+    ///
     fn print(&self){
         println!("{:?}",self.data)
     }
 
-    //行列データへのアクセサ
-    //
+    /// 行列データへのアクセサ
+    /// ベクトルベクトルを返却する。
     fn get(&self) -> &Vec<Vec<T>>{
         &self.data
     }
 
-    //行列データのセッター
-    //
+    /// 行列データのセッター
+    /// 
     fn set(&mut self, m: Vec<Vec<T>>){
         if m.len() == 0 {
             panic!("argument has zero length");
@@ -150,39 +163,53 @@ where
         if self.debug {
             println!("new data set: {:?}", m);
         }
-        self.data = m;
+        for i in 0..self.data.len() {
+            for j in 0..self.data[0].len() {
+                self.data[i][j] = m[i][j]
+            }
+        }
     }
 
-    //デバッガ
-    //デバッグフラグを有効化したインスタンスを返す。
-    //
+    /// デバッガ
+    /// デバッグフラグを有効化したインスタンスを返す。
+    ///
     fn debug(&mut self) -> &mut Self {
         self.debug = true;
         println!("debuging for: {:?}",self.data);
         self
     }
 
-    // 行列データ整合性検証
-    // 長さ0もしくは長さの一致しないデータを検出した時点で強制終了
-    //
-    fn integrity_check(&self) {
+    /// 行列データ整合性検証
+    /// 長さ0もしくは長さの一致しないデータを検出した時点で強制終了
+    ///
+    fn integrity_check(&self) -> Result<&Self, &str> {
         if self.data.len() == 0 {
-            panic!("zero matrix length detected");
+            return Err("zero matrix length detected");
         }
         for i in 0..self.data.len() {
             let len = self.data[0].len(); 
             if self.data[i].len() != len {
-                panic!("matrix corrupted at column {} (data: {:?}, length: {}, expected {})", i, self.data[i], self.data[i].len(), len);
+                println!("matrix corrupted at column {} (data: {:?}, length: {}, expected {})", i, self.data[i], self.data[i].len(), len);
+                return Err("matrix corrupted");
             }
         }
-
+        Ok(&self)
     }
 
-    //行抽出関数
-    //Vec<T>として行を返却
-    //
+    fn range_check(&self, row: usize, col: usize) -> Result<&Self, &str> {
+        if row >= self.data.len() {
+            return Err("row is out of order")
+        } else if col >= self.data[0].len() {
+            return Err("col is out of order")
+        }
+        Ok(&self)
+    }
+
+    /// 行抽出関数
+    /// Vec<T>として行を返却
+    ///
     fn row(&self, num: usize) -> Vec<T> {
-        self.integrity_check();
+        self.integrity_check().unwrap();
         if num >= self.data.len() {
             panic!("row number {} is out of order: must be less than {}",num, self.data.len());
         } else {
@@ -194,11 +221,11 @@ where
         }
     }
 
-    //列抽出関数
-    //Vec<T>として列を返却
-    //
+    /// 列抽出関数
+    /// Vec<T>として列を返却
+    ///
     fn col(&self, num: usize) -> Vec<T> {
-        self.integrity_check();
+        self.integrity_check().unwrap();
         if num >= self.data[0].len() {
             panic!("colum number {} is out of order: must be less than {}",num, self.data[0].len());
         }
@@ -209,22 +236,34 @@ where
         res
     }
 
-    //行数表示関数
+    /// 行数表示関数
     //
-    fn row_len(&self) -> usize {
+    fn rows(&self) -> usize {
         self.data.len()
     }
 
     //列数表示関数
     //
-    fn col_len(&self) -> usize {
-        self.integrity_check();
-        self.data[0].len()
+    fn cols(&self) -> usize {
+        if self.data.len() == 0 {
+            0
+        } else {
+            self.data[0].len()
+        }
     }
 
-    //正方行列判定
-    //オブジェクト参照をResultにくるんで返却する
-    //
+    /// 正方行列判定
+    ///
+    /// 正方行列であるかどうかを判定し、Result型にくるんでオブジェクト参照を
+    /// 返却する
+    ///
+    /// ```rust
+    /// use tensors::core::{Matrix,TensorProcessor,Numbers};
+    /// use tensors::mat;
+    /// let m = mat![i32: [1,2,3], [2,3,4],[3,4,5]];
+    /// m.is_square().unwrap();
+    /// ```
+
     fn is_square(&self) -> Result<&Self, &str> {
         if self.data.len() != self.data[0].len() {
             Err("not a square matrix")
@@ -257,7 +296,7 @@ where
             println!("matrix row replacement: {} with {}", src, dst );
             println!("{:?}",self.data);
         }
-        self.integrity_check();
+        self.integrity_check().unwrap();
 
         self
     }
@@ -265,7 +304,7 @@ where
     //列置換操作
     //
     fn col_replace(&mut self, src: usize, dst: usize) -> &mut Self {
-        self.integrity_check();
+        self.integrity_check().unwrap();
 
         if src >= self.data[0].len() {
             panic!("src address out of range {}", src);
@@ -287,14 +326,41 @@ where
 
     }
 
-    // 転置
-    //
+	/// 転置
+    /// 転置行列でデータを更新し、オブジェクト参照を返却する。
+	///
+	///```rust
+	/// use tensors::core::{Matrix,TensorProcessor,Numbers};
+	/// use tensors::mat;
+	///        let mut m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
+	///        assert_eq!(m.rows(),3);
+	///        assert_eq!(m.cols(),5);
+	///        let res = mat![
+	///            i32:
+	///                [1,2,3],
+	///                [2,3,4],
+	///                [3,4,5],
+	///                [4,5,6],
+	///                [5,6,7]
+	///        ];
+	///        m.transpose();
+	///        assert_eq!(m.rows(),5);
+	///        assert_eq!(m.cols(),3);
+	///        for i in 0..m.rows(){
+	///            for j in 0..m.cols(){
+	///                assert_eq!(m.get()[i][j], res.get()[i][j]);
+	///            }
+	///        }
+	///
+	///```
+	
+
     fn transpose (&mut self) -> &mut Self {
-        self.integrity_check();
+        self.integrity_check().unwrap();
 
         let mut res: Vec<Vec<T>> = Vec::new();
-        let col_len = self.data[0].len();
-        for i in 0..col_len {
+        let cols = self.data[0].len();
+        for i in 0..cols {
             res.push(Vec::new());
             let col = self.col(i);
             for j in 0..self.data.len() {
@@ -307,7 +373,7 @@ where
         while self.data.len() != 0 {
             self.data.pop();
         }
-        for i in 0..col_len {
+        for i in 0..cols {
             self.data.push(Vec::new());
             for j in 0..res[0].len() {
                 self.data[i].push(res[i][j]);
@@ -359,25 +425,33 @@ where
 
 }
 
+
 impl<T> TensorProcessor<T> for Numbers<T>
 where
-    T: Copy + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign + std::ops::Sub<Output=T> + std::ops::Mul<Output=T> + std::fmt::Display + std::fmt::Debug
+    T: Copy + std::ops::AddAssign + std::ops::SubAssign + std::ops::MulAssign + std::ops::DivAssign + std::ops::Sub<Output=T> + std::ops::Mul<Output=T> + std::fmt::Display + std::fmt::Debug + PartialEq
 {
 
-    //型Tにおけるゼロ値でデータを初期化
-    fn zero(&mut self) -> &mut Self {
+    /// ゼロ値取得関数
+    fn zero(&self) -> T {
+        self.data[0][0] - self.data[0][0]
+    }
+
+    /// ゼロ充填
+    /// 型Tにおけるゼロ値で全データを更新
+    fn fill_zero(&mut self) -> &mut Self {
+        let zero = self.zero();
         for i in 0..self.data.len(){
             for j in 0..self.data[0].len(){
-                self.data[i][j] = self.data[i][j] - self.data[i][j];
+                self.data[i][j] = zero;
             }
         }
         self
     }
 
-    //一括加算
-    //
+    /// スカラー加算
+    ///
     fn add(&mut self, val: T) -> &mut Self {
-        self.integrity_check();
+        self.integrity_check().unwrap();
         for i in 0 .. self.data.len() {
             for j in 0..self.data[0].len() {
                 self.data[i][j] += val;
@@ -390,10 +464,10 @@ where
         self
     }
 
-    //一括減算
-    //
+    /// スカラー減算
+    ///
     fn sub(&mut self, val: T) -> &mut Self {
-        self.integrity_check();
+        self.integrity_check().unwrap();
         for i in 0 .. self.data.len() {
             for j in 0..self.data[0].len() {
                 self.data[i][j] -= val;
@@ -406,10 +480,10 @@ where
         self
     }
 
-    //一括乗算
-    //
+    /// スカラー乗算
+    ///
     fn mul(&mut self, val: T) -> &mut Self {
-        self.integrity_check();
+        self.integrity_check().unwrap();
         for i in 0..self.data.len() {
             for j in 0..self.data[0].len() {
                 self.data[i][j] *= val;
@@ -422,10 +496,10 @@ where
         self
     }
 
-    //一括除算
-    // (i32では端数切捨て)
+    /// スカラー除算
+    /// (i32では端数切捨て)
     fn div(&mut self, val: T) -> &mut Self {
-        self.integrity_check();
+        self.integrity_check().unwrap();
         for i in 0..self.data.len() {
             for j in 0..self.data[0].len() {
                 self.data[i][j] /= val;
@@ -438,80 +512,114 @@ where
         self
     }
 
-    //行列乗算 
-    //引数として与えられた同一型の行列インスタンスを用いて乗算を行い、
-    //データ変更後のインスタンスを返却する。
-    //
-    fn prod (&mut self, m: Numbers<T>) -> &mut Self {
-        self.integrity_check();
-        m.integrity_check();
+    /// 行列乗算 
+    /// 引数として与えられた同一型の行列インスタンスを用いて 
+    /// self.data を元とする行列の積を計算し、 データ更新後の
+    /// オブジェクト参照を返却する。
+    ///
+    /// ```rust
+    /// use tensors::core::{Matrix,TensorProcessor,Numbers};
+    /// use tensors::mat;
+    ///
+    /// let mut m = mat![
+    ///     i32:
+    ///         [1,2,3],
+    ///         [4,5,7]
+    /// ];
+    /// let n = mat![
+    ///     i32:
+    ///         [1,3],
+    ///         [5,7],
+    ///         [10,10]
+    /// ];
+    /// let res = mat![
+    ///     i32:
+    ///         [41,47],
+    ///         [99,117]
+    /// ];
+    ///
+    /// let p = m.prod(n).unwrap();
+    ///
+    /// assert_eq!(p.rows(),2);
+    /// assert_eq!(p.cols(),2);
+    /// for i in 0..p.rows() {
+    ///     for j in 0..p.cols() {
+    ///         assert_eq!(p.get()[i][j], res.get()[i][j]);
+    ///     }
+    /// }
+    /// ```
+
+    fn prod (&self, m: Numbers<T>) -> Result<Numbers<T>,&str> {
+        self.integrity_check().unwrap();
+        m.integrity_check().unwrap();
+
         if self.data.len() != m.data[0].len() {
-            panic!("row length not matched to the col length of argument")
+            return Err("row length not matched to the col length of argument")
         } else if self.data[0].len() != m.data.len() {
-            panic!("col length not matched to the row length of argument")
+            return Err("col length not matched to the row length of argument")
         }
         //解行列のサイズ
         let res_length: usize = self.data.len();
-        let mut res: Vec<Vec<T>> = Vec::new();
 
-        //解行列の初期化
-        while res.len() < res_length {
-            res.push(Vec::new());
-        }
-        for i in 0..res_length {
-            let mut j = 0;
-            while res[i].len() < res_length {
-                res[i].push( self.data[i][j] - self.data[i][j] );
-                j += 1;
-            }
-        }
-        
+        let mut res: Numbers<T> = mat![T];
+
         //解行列の計算
         for i in 0..self.data.len() {
             for j in 0..m.data.len() {
                 for seq in 0..res_length {
                     //println!("res[{}][{}] += self.data[{}][{}] + m.data[{}][{}] = {}", i, seq, seq, j, j, seq, self.data[seq][j] * m.data[j][seq]);
-                    res[i][seq] += self.data[i][j] * m.data[j][seq];
+                    if i >= res.rows() {
+                        res.data.push(Vec::new());
+                    }
+                    if seq >= res.data[i].len() {
+                        res.data[i].push(self.zero());
+                    }
+                    if self.debug {
+                        println!("i: {}, j: {}, seq: {}, where res.data is {:?}",i,j,seq, res.data);
+                    }
+                    res.data[i][seq] += self.data[i][j] * m.data[j][seq];
                 }
             }
         }
+
         //println!("res: {:?}",res);
-
-        // self.data 行列のリサイズ
-        while self.data.len() < res_length {
-            self.data.push(Vec::new());
-        }
-        for i in 0..self.data.len() {
-            while self.data[i].len() > res_length {
-                self.data[i].pop();
-            }
-        }
-
-
-        //解行列のselfへの適用
-        for i in 0..res_length {
-            for j in 0..res_length {
-                self.data[i][j] = res[i][j];
-            }
-        }
-
-        if self.debug {
-            println!("matrix multiple for m: {:?}", m.data);
-            println!("{:?}",self.data);
-        }
-        self
+        Ok(res)
     }
 
-    //余因子行列
-    //行p, 列q についての余因子行列を取得し、Resultでくるんで返却する
-    //
+    /// 余因子行列取得関数
+    /// 行p, 列q についての余因子行列を取得し、Result型に
+    /// くるんだ Numbers<T>型として返却する。オブジェクト本体の
+    /// 変更は行わないイミュータブルな実装。
+    ///
+    /// ```rust
+    /// use tensors::core::{Matrix,TensorProcessor,Numbers};
+    /// use tensors::mat;
+    ///
+    /// let m = mat![
+    ///     i32:
+    ///         [1,2,3],
+    ///         [4,5,7],
+    ///         [9,17,13289]
+    /// ];
+    /// let res = mat![
+    ///     i32:
+    ///         [1,-3],
+    ///         [-9,13289]
+    /// ];
+    /// let adj = m.adjugate(1,1).unwrap();
+    /// assert_eq!(adj.rows(), 2);
+    /// assert_eq!(adj.cols(), 2);
+    /// for i in 0..adj.rows() {
+    ///     for j in 0..adj.cols() {
+    ///         assert_eq!(adj.get()[i][j], res.get()[i][j]);
+    ///     }
+    /// }
+    /// ```
+    ///
+
     fn adjugate(&self, p: usize, q: usize) -> Result<Numbers<T>,&str> {
-        self.integrity_check();
-        if p >= self.data.len() {
-            return Err("row is out of order")
-        } else if q >= self.data[0].len() {
-            return Err("col is out of order")
-        }
+        self.integrity_check().unwrap();
+        self.range_check(p,q).unwrap();
         let mut res = Numbers::<T>::new();
         for i in 0..self.data.len() {
             let mut v = Vec::new();
@@ -538,11 +646,27 @@ where
         Ok(res)
     }
 
-    //行列式
-    //行列式を計算し、型Tで結果を返却する
-    //
+
+    /// 行列式
+    /// 行列式を計算し、型Tで結果を返却する
+    ///
+    /// ```rust
+    /// use tensors::core::{Matrix,TensorProcessor,Numbers};
+    /// use tensors::mat;
+    ///
+    /// let m = mat![
+    ///     i32:
+    ///         [2,3,4,1],
+    ///         [1,2,3,4],
+    ///         [4,1,2,3],
+    ///         [3,2,1,4]
+    /// ];
+    /// assert_eq!(m.determinant(),80);
+    /// ```
+    ///
+
     fn determinant(&self) -> T {
-        self.integrity_check();
+        self.integrity_check().unwrap();
         self.is_square().unwrap();
 
         if self.data.len() == 1 {
@@ -560,6 +684,26 @@ where
                 }
             }
             res
+        }
+    }
+
+
+    /// 正則行列判定
+    /// 正則行列であるかどうか調べ、Result型にくるんで
+    /// オブジェクト参照を返却する。
+    ///
+    /// ```rust
+    /// use tensors::{Matrix,TensorProcessor,Numbers};
+    /// use tensors::mat;
+    ///
+    /// let r = mat![i32:[1,2],[3,4]];
+    /// r.is_regular().unwrap();
+    /// ```
+    fn is_regular(&self) -> Result<&Self, &str> {
+        if self.determinant() != self.zero() {
+            Ok(self)
+        } else {
+            Err("the matrix is not a regular matrix")
         }
     }
 }
@@ -609,12 +753,6 @@ mod tests_matrix {
     }
 
     #[test]
-    fn test_is_square(){
-        let m = mat![i32: [1,2,3], [2,3,4],[3,4,5]];
-        m.is_square().unwrap();
-    }
-
-    #[test]
     #[should_panic]
     fn test_is_square_error(){
         let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
@@ -624,7 +762,7 @@ mod tests_matrix {
     #[test]
     fn test_integrity(){
         let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
-        m.integrity_check();
+        m.integrity_check().unwrap();
     }
 
     #[test]
@@ -632,7 +770,7 @@ mod tests_matrix {
     //ゼロ値でパニック
     fn test_integrity_error_zero(){
         let mut m = Numbers::<i32>::new();
-        m.integrity_check();
+        m.integrity_check().unwrap();
     }
 
     #[test]
@@ -643,7 +781,7 @@ mod tests_matrix {
         //privateフィールドに手動でベクトル代入
         m.data.push(vec![1,2,3]);
         m.data.push(vec![1,2,3,4,5]);
-        m.integrity_check();
+        m.integrity_check().unwrap();
     }
 
 
@@ -680,15 +818,15 @@ mod tests_matrix {
     }
 
     #[test]
-    fn test_row_len(){
+    fn test_rows(){
         let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
-        assert_eq!(m.row_len(),3);
+        assert_eq!(m.rows(),3);
     }
 
     #[test]
-    fn test_col_len(){
+    fn test_cols(){
         let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
-        assert_eq!(m.col_len(),5);
+        assert_eq!(m.cols(),5);
     }
 
     #[test]
@@ -742,31 +880,6 @@ mod tests_matrix {
                 [3,5,7]
         ];
         m.transpose();
-        for i in 0..m.data.len(){
-            for j in 0..m.data[0].len(){
-                assert_eq!(m.data[i][j], res.data[i][j]);
-            }
-        }
-
-    }
-
-
-    #[test]
-    fn test_transpose_rect(){
-        let mut m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
-        assert_eq!(m.data.len(),3);
-        assert_eq!(m.data[0].len(),5);
-        let res = mat![
-            i32:
-                [1,2,3],
-                [2,3,4],
-                [3,4,5],
-                [4,5,6],
-                [5,6,7]
-        ];
-        m.transpose();
-        assert_eq!(m.data.len(),5);
-        assert_eq!(m.data[0].len(),3);
         for i in 0..m.data.len(){
             for j in 0..m.data[0].len(){
                 assert_eq!(m.data[i][j], res.data[i][j]);
@@ -830,34 +943,6 @@ mod tests_processor {
     }
 
     #[test]
-    fn test_prod(){
-        let mut m = mat![
-            i32:
-                [1,2,3],
-                [4,5,7]
-        ];
-        let n = mat![
-            i32:
-                [1,3],
-                [5,7],
-                [10,10]
-        ];
-        let res = mat![
-            i32:
-                [41,47],
-                [99,117]
-        ];
-        m.prod(n);
-        assert_eq!(m.data.len(),2);
-        assert_eq!(m.data[0].len(),2);
-        for i in 0..m.data.len() {
-            for j in 0..m.data[0].len() {
-                assert_eq!(m.data[i][j], res.data[i][j]);
-            }
-        }
-    }
-
-    #[test]
     #[should_panic]
     fn test_prod_error_unmatched(){
         let mut m = mat![
@@ -870,7 +955,7 @@ mod tests_processor {
                 [1,0],
                 [0,1]
         ];
-        m.prod(n);
+        m.prod(n).unwrap();
     }
 
     #[test]
@@ -882,33 +967,7 @@ mod tests_processor {
                 [4,5,7]
         ];
         let n = Numbers::<i32>::new();
-        m.prod(n);
-    }
-
-    #[test]
-    fn test_adjugate(){
-        let m = mat![
-            i32:
-                [1,2,3],
-                [4,5,7],
-                [9,17,13289]
-        ];
-        let res = mat![
-            i32:
-                [1,-3],
-                [-9,13289]
-        ];
-        let adj = m.adjugate(1,1).unwrap();
-        assert_eq!(adj.data.len(), 2);
-        assert_eq!(adj.data[0].len(), 2);
-        assert_eq!(adj.data.len(), res.data.len());
-        assert_eq!(adj.data[0].len(), res.data[0].len());
-        //panic!("adj {:?}",adj.data);
-        for i in 0..adj.data.len() {
-            for j in 0..adj.data[0].len() {
-                assert_eq!(adj.data[i][j], res.data[i][j]);
-            }
-        }
+        m.prod(n).unwrap();
     }
 
     #[test]
@@ -936,18 +995,6 @@ mod tests_processor {
                 [1,1,5]
         ];
         assert_eq!(m.determinant(),3);
-    }
-
-    #[test]
-    fn test_determinant_4x4(){
-        let m = mat![
-            i32:
-                [2,3,4,1],
-                [1,2,3,4],
-                [4,1,2,3],
-                [3,2,1,4]
-        ];
-        assert_eq!(m.determinant(),80);
     }
 
     #[test]
