@@ -1,7 +1,47 @@
 use tensors::core::{List,Matrix};
 use tensors::mat;
 
+
 fn main(){
+    let mut c = mat![
+        f32:
+            [1.2, 3.4, 3.4, 4.5],
+            [7.8, 9.10, 112.3, 456.78],
+            [12.345, 67.89, 0.0, 0.0],
+            [3.0, 1.11, 31.3, 1.11]
+    ];
+    let mut d = mat![
+        f64:
+            [1.0,2.0,0.0],
+            [3.0,1.0,2.0],
+            [-1.0,3.0,1.0]
+    ];
+
+
+
+    println!("determinant for {:?} is {}.", c.dump(), c.determinant());
+    println!("adjugate[{},{}] for",1,2, );
+    for e in c.dump() {
+        println!("{:?}",e);
+    }
+    println!("is");
+    for e in c.adjugate(1,2).unwrap().dump() {
+        println!("{:?}",e);
+    }
+    println!("");
+    println!("d is ");
+    for e in d.dump() {
+        println!("{:?}",e);
+    }
+    println!("d inverse is ");
+    for e in d.inverse().unwrap().dump() {
+        println!("{:?}",e);
+    }
+
+
+
+
+    /******************************
     let mut t = Matrix::<i32>::new();
     let mut c = mat![
         f32:
@@ -124,4 +164,5 @@ fn main(){
     ];
     let z = x * y;
     z.print();
+    ******************************/
 }

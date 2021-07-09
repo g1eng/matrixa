@@ -1026,6 +1026,70 @@ where
         }
     }
 
+    /// 逆行列
+    ///
+    /// 正則行列の逆行列を取得する関数。
+    /// selfの逆行列としてResult型に格納したMatrix<T>を返却し、
+    /// 正則行列でないものについてはErrを返却する。
+    ///
+    /// ```rust
+    /// use tensors::core::{List,Matrix};
+    /// use tensors::mat;
+    ///
+    /// let mut d = mat![
+    ///    f64:
+    ///        [1.0,2.0,0.0],
+    ///        [3.0,1.0,2.0],
+    ///        [-1.0,3.0,1.0]
+    /// ];
+    /// let result = d.inverse().unwrap().get();
+    /// let result_cmp = mat![
+    ///    f64:
+    ///        [0.3333333333333333, 0.13333333333333333, -0.26666666666666666],
+    ///        [0.3333333333333333, -0.06666666666666667, 0.13333333333333333],
+    ///        [-0.6666666666666666, 0.3333333333333333, 0.3333333333333333]
+    /// ];
+    ///
+    /// println!("d is ");
+    /// for e in d.dump() {
+    ///    println!("{:?}",e);
+    /// }
+    /// println!("d inverse is ");
+    /// for i in 0..result.rows() {
+    ///     println!("{:?}",result.col(i));
+    ///     for j in 0..result.cols() {
+    ///         assert_eq!(result.dump()[i][j], result_cmp.dump()[i][j]);
+    ///     }
+    /// }
+    /// ```
+    ///
+    pub fn inverse(&self) -> Result<Matrix<T>,&str> {
+        match self.is_regular() {
+            Err(e) => Err("not a regular matrix"),
+            Ok(_) => {
+                let mut res = mat![T: [self.zero()]];
+                res.resize(self.rows(), self.cols());
+
+                let det = self.determinant();
+
+                for i in 0..res.rows() {
+                    for j in 0..res.cols() {
+                        let datum = self.adjugate(i,j)
+                            .unwrap()
+                            .determinant() / det;
+                        if ( i + j ) % 2 == 0 {
+                            res.data[i][j] = datum;
+                        } else {
+                            res.data[i][j] = datum - datum - datum;
+                        }
+                    }
+                }
+                Ok(res.transpose().get())
+            }
+        }
+    }
+
+
 }
 
 impl<T> Matrix <T>
