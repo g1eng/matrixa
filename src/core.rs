@@ -75,13 +75,14 @@ impl<T: std::fmt::Debug> Matrix<T> {
 
         if self.data.len() != 0 {
             if self.data[0].len() != data.len(){
-                println!("Invalid vector length: {}, expected: {}",data.len(), self.data.len());
+                //println!("Invalid vector length: {}, expected: {}",data.len(), self.data.len());
                 return Err("Invalid vector length")
             }
         }
+        /*
         if self.debug {
             println!("pushing {:?}", data);
-        }
+        }*/
 
         self.data.push(data);
         Ok(self)
@@ -136,14 +137,29 @@ macro_rules! mat {
     };
 }
 
-//TODO: リサイズ関数を適用
 /// 行列の加算
 /// 行列の要素ごとの加算を行い、新規インスタンスとして結果を返却する。
 /// 行および列の数が一致しない行列が指定された場合はパニックする。
 ///
+/// ```rust
+/// use tensors::core::{List,Matrix};
+/// use tensors::mat;
+///
+/// let m = mat![i32:[1,2],[3,4]];
+/// let n = mat![i32:[-5,6],[7,-8]];
+/// let ans = mat![i32:[-4,8],[10,-4]];
+/// let res = m + n;
+/// for i in 0..ans.rows() {
+///     for j in 0..ans.cols() {
+///         assert_eq!(res.row(i)[j], ans.row(i)[j]);
+///     }
+/// }
+/// ```
+///
+
 impl<T: std::ops::Add<Output=T> + std::ops::Sub<Output=T> > Add for Matrix<T>
 where
-    T: Copy + std::ops::Add<Output=T> + std::ops::Sub<Output=T>
+    T: Copy + std::ops::Add<Output=T> + std::ops::Sub<Output=T> + std::fmt::Debug
 {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -158,33 +174,45 @@ where
         }
 
         let zero = self.data[0][0]-self.data[0][0];
-        let mut res = Vec::new();
+        let mut res = Self::new();
+        res.push(Vec::new());
+
         for i in 0..self.data.len() {
-            if i >= res.len() {
-                res.push(Vec::new());
+            if i >= res.data.len() {
+                res.data.push(Vec::new());
             }
             for j in 0..self.data[0].len() {
-                res[i].push(zero);
-                res[i][j] = self.data[i][j] + other.data[i][j];
+                res.data[i].push(zero);
+                res.data[i][j] = self.data[i][j] + other.data[i][j];
             }
         }
-        Self {
-            data: res,
-            current: 0,
-            max: 0,
-            debug: self.debug,
-        }
+        res
     }
 }
 
-//TODO: リサイズ関数を適用
 /// 行列の減算
 /// 行列の要素ごとの減算を行い、新規インスタンスとして結果を返却する。
 /// 行および列の数が一致しない行列が指定された場合はパニックする。
 ///
+/// ```rust
+/// use tensors::core::{List,Matrix};
+/// use tensors::mat;
+///
+/// let m = mat![i32:[1,2],[3,4]];
+/// let n = mat![i32:[-5,6],[7,-8]];
+/// let ans = mat![i32:[6,-4],[-4,12]];
+/// let res = m - n;
+/// for i in 0..ans.rows() {
+///     for j in 0..ans.cols() {
+///         assert_eq!(res.row(i)[j], ans.row(i)[j]);
+///     }
+/// }
+/// ```
+///
+
 impl<T: std::ops::Add<Output=T> + std::ops::Sub<Output=T> > Sub for Matrix<T>
 where
-    T: Copy + std::ops::Add<Output=T> + std::ops::Sub<Output=T>
+    T: Copy + std::ops::Add<Output=T> + std::ops::Sub<Output=T> + std::fmt::Debug
 {
     type Output = Self;
     fn sub(self, other: Self) -> Self {
@@ -199,32 +227,62 @@ where
         }
 
         let zero = self.data[0][0]-self.data[0][0];
-        let mut res = Vec::new();
+        let mut res = Self::new();
+        res.push(Vec::new());
+
         for i in 0..self.data.len() {
-            if i >= res.len() {
-                res.push(Vec::new());
+            if i >= res.data.len() {
+                res.data.push(Vec::new());
             }
             for j in 0..self.data[0].len() {
-                res[i].push(zero);
-                res[i][j] = self.data[i][j] - other.data[i][j];
+                res.data[i].push(zero);
+                res.data[i][j] = self.data[i][j] - other.data[i][j];
             }
         }
-        Self {
-            data: res,
-            current: 0,
-            max: 0,
-            debug: self.debug,
-        }
+        res
     }
 }
 
 
-//TODO: リサイズ関数を適用
 /// 積
+///
 /// 行列の積の計算を行い、新規インスタンスとして結果を返却する。
 /// 積の定義されない(不正な行・列の)組み合わせの行列が指定された場合は
 /// パニックする。
 ///
+/// ```rust
+/// use tensors::core::{List,Matrix};
+/// use tensors::mat;
+///
+/// let mut m = mat![
+///     i32:
+///         [1,2,3],
+///         [4,5,7]
+/// ];
+/// let n = mat![
+///     i32:
+///         [1,3],
+///         [5,7],
+///         [10,10]
+/// ];
+/// let res = mat![
+///     i32:
+///         [41,47],
+///         [99,117]
+/// ];
+///
+/// let p = m * n;
+///
+/// assert_eq!(p.rows(),2);
+/// assert_eq!(p.cols(),2);
+/// for i in 0..p.rows() {
+///     for j in 0..p.cols() {
+///         assert_eq!(p.dump()[i][j], res.dump()[i][j]);
+///     }
+/// }
+/// ```
+///
+
 impl<T: std::ops::Mul<Output=T> + std::ops::Sub<Output=T> + std::ops::Add<Output=T> + std::fmt::Debug > Mul for Matrix<T>
 where
     T: Copy + std::ops::Mul<Output=T> + std::ops::Sub<Output=T> + std::ops::Add<Output=T> + std::fmt::Debug
@@ -244,7 +302,7 @@ where
         //解行列のサイズ
         let res_length: usize = self.data.len();
 
-        let mut res: Self = mat![T];
+        let mut res = Self::new();
         let zero = self.data[0][0] - self.data[0][0];
 
         //解行列の計算
@@ -493,7 +551,6 @@ where
 	///        }
 	///
 	///```
-	
 
     fn transpose (&mut self) -> &mut Self {
         self.integrity_check().unwrap();
