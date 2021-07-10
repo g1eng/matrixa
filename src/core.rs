@@ -51,7 +51,9 @@ pub struct Matrix<T> {
     debug: bool,
 }
 
-impl<T: std::fmt::Debug> Matrix<T> {
+impl<
+    T: std::fmt::Debug> Matrix<T> 
+{
 
     /// 行列生成
     /// 新規の行列インスタンスを生成し、空行列として返却する
@@ -157,9 +159,16 @@ macro_rules! mat {
 /// ```
 ///
 
-impl<T: std::ops::Add<Output=T> + std::ops::Sub<Output=T> > Add for Matrix<T>
+impl<
+    T: std::ops::Add<Output=T> + std::ops::Sub<Output=T> 
+> 
+Add for Matrix<T>
 where
-    T: Copy + std::ops::Add<Output=T> + std::ops::Sub<Output=T> + std::fmt::Debug
+    T: 
+        Copy + 
+        std::ops::Add<Output=T> +
+        std::ops::Sub<Output=T> +
+        std::fmt::Debug
 {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -210,9 +219,16 @@ where
 /// ```
 ///
 
-impl<T: std::ops::Add<Output=T> + std::ops::Sub<Output=T> > Sub for Matrix<T>
+impl<
+    T: std::ops::Add<Output=T> + std::ops::Sub<Output=T> 
+> 
+Sub for Matrix<T>
 where
-    T: Copy + std::ops::Add<Output=T> + std::ops::Sub<Output=T> + std::fmt::Debug
+    T: 
+        Copy + 
+        std::ops::Add<Output=T> +
+        std::ops::Sub<Output=T> +
+        std::fmt::Debug
 {
     type Output = Self;
     fn sub(self, other: Self) -> Self {
@@ -283,9 +299,21 @@ where
 /// ```
 ///
 
-impl<T: std::ops::Mul<Output=T> + std::ops::Sub<Output=T> + std::ops::Add<Output=T> + std::fmt::Debug > Mul for Matrix<T>
+impl<
+    T: 
+        std::ops::Mul<Output=T> +
+        std::ops::Sub<Output=T> +
+        std::ops::Add<Output=T> +
+        std::fmt::Debug 
+> 
+Mul for Matrix<T>
 where
-    T: Copy + std::ops::Mul<Output=T> + std::ops::Sub<Output=T> + std::ops::Add<Output=T> + std::fmt::Debug
+    T: 
+        Copy + 
+        std::ops::Mul<Output=T> + 
+        std::ops::Sub<Output=T> + 
+        std::ops::Add<Output=T> + 
+        std::fmt::Debug
 {
     type Output = Self;
 
@@ -1038,10 +1066,10 @@ where
     ///         [4,1,2,3],
     ///         [3,2,1,4]
     /// ];
-    /// assert_eq!(m.determinant(),80);
+    /// assert_eq!(m.det(),80);
     /// ```
     ///
-    pub fn determinant(&self) -> T {
+    pub fn det(&self) -> T {
         self.integrity_check().unwrap();
         self.is_square().unwrap();
 
@@ -1054,9 +1082,9 @@ where
             for i in 0..self.data.len() {
                 let adj = self.adjugate(i,0).unwrap();
                 if i % 2 == 0 {
-                    res = res + self.data[i][0] * adj.determinant();
+                    res = res + self.data[i][0] * adj.det();
                 } else {
-                    res = res - self.data[i][0] * adj.determinant();
+                    res = res - self.data[i][0] * adj.det();
                 }
             }
             res
@@ -1076,7 +1104,7 @@ where
     /// r.is_regular().unwrap();
     /// ```
     pub fn is_regular(&self) -> Result<&Self, &str> {
-        if self.determinant() != self.zero() {
+        if self.det() != self.zero() {
             Ok(self)
         } else {
             Err("the matrix is not a regular matrix")
@@ -1127,13 +1155,13 @@ where
                 let mut res = mat![T: [self.zero()]];
                 res.resize(self.rows(), self.cols());
 
-                let det = self.determinant();
+                let det = self.det();
 
                 for i in 0..res.rows() {
                     for j in 0..res.cols() {
                         let datum = self.adjugate(i,j)
                             .unwrap()
-                            .determinant() / det;
+                            .det() / det;
                         if ( i + j ) % 2 == 0 {
                             res.data[i][j] = datum;
                         } else {
@@ -1445,53 +1473,53 @@ mod tests_matrix_operation {
     }
 
     #[test]
-    fn test_determinant_2x2(){
+    fn test_det_2x2(){
         let m = mat![
             i32:
                 [1,2],
                 [-3,-4]
         ];
-        assert_eq!(m.determinant(),2);
+        assert_eq!(m.det(),2);
     }
 
     #[test]
-    fn test_determinant_1x1(){
+    fn test_det_1x1(){
         let m = mat![i32: [5]];
-        assert_eq!(m.determinant(),5);
+        assert_eq!(m.det(),5);
     }
 
     #[test]
-    fn test_determinant_3x3(){
+    fn test_det_3x3(){
         let m = mat![
             i32:
                 [1,2,3],
                 [0,1,1],
                 [1,1,5]
         ];
-        assert_eq!(m.determinant(),3);
+        assert_eq!(m.det(),3);
     }
 
     #[test]
-    fn test_determinant_3x3_float(){
+    fn test_det_3x3_float(){
         let m = mat![
             f32:
                 [1.0,2.0,3.0],
                 [0.0,1.0,1.0],
                 [1.0,1.0,5.0]
         ];
-        assert_eq!(m.determinant(),3.0);
+        assert_eq!(m.det(),3.0);
     }
 
     #[test]
     #[should_panic]
-    fn test_determinant_3x2_error(){
+    fn test_det_3x2_error(){
         let m = mat![
             i32:
                 [1,2],
                 [0,1],
                 [1,1]
         ];
-        m.determinant();
+        m.det();
     }
 
 }
