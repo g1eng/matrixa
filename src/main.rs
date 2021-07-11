@@ -2,7 +2,7 @@ use tensors::core::{List, Matrix};
 use tensors::mat;
 
 fn main() {
-    let mut c = mat![
+    let c = mat![
         f32:
             [1.2, 3.4, 3.4, 4.5],
             [7.8, 9.10, 112.3, 456.78],

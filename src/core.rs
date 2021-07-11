@@ -16,7 +16,8 @@
 //!    .unwrap()
 //!    .push(vec![5,6,7,8,9])
 //!    .unwrap();
-//!  fm.push(vec![1.23,4.56,7.89])
+//!  fm.debug()
+//!    .push(vec![1.23,4.56,7.89])
 //!    .unwrap();
 //!  im.add(1).print();
 //!  im.mul(3).print();
@@ -72,9 +73,9 @@ impl<T: std::fmt::Debug> Matrix<T> {
     /// デバッガ
     /// デバッグフラグを有効化したインスタンスを返す。
     ///
-    fn debug(&mut self) -> &mut Self {
+    pub fn debug(&mut self) -> &mut Self {
         self.debug = true;
-        println!("debuging for: {:?}", self.data);
+        println!("debugging for: {:?}", self.data);
         self
     }
 
@@ -133,10 +134,11 @@ macro_rules! mat {
                 )*
                 if vec_len == 0 {
                     vec_len = t_vec.len();
-                } else if vec_len != t_vec.len() {
+                }
+                if vec_len != t_vec.len() {
                     panic!("invalid vector length for {:?}!", t_vec)
                 }
-                matrix.push(t_vec);
+                matrix.push(t_vec).expect("failed to push new vector into the matrix");
             )*
             matrix
         }
@@ -190,7 +192,6 @@ where
 
         let zero = T::from(0x0u8);
         let mut res = Self::new();
-        res.push(Vec::new());
 
         for i in 0..self.data.len() {
             if i >= res.data.len() {
@@ -232,22 +233,21 @@ where
     type Output = Self;
     fn sub(self, other: Self) -> Self {
         if self.data.len() == 0 {
-            panic!("zero length origin for substract");
+            panic!("zero length origin for subtract");
         } else if other.data.len() == 0 {
-            panic!("zero length company for substract");
+            panic!("zero length company for subtract");
         } else if self.data.len() != other.data.len() {
             panic!(
-                "row number not matched for substract: {}, {}",
+                "row number not matched for subtract: {}, {}",
                 self.data.len(),
                 other.data.len()
             );
         } else if self.data[0].len() != other.data[0].len() {
-            panic!("row number not matched for substract");
+            panic!("row number not matched for subtract");
         }
 
         let zero = T::from(0x0u8);
         let mut res = Self::new();
-        res.push(Vec::new());
 
         for i in 0..self.data.len() {
             if i >= res.data.len() {
@@ -378,61 +378,6 @@ where
         &self.data
     }
 
-    /// 行列データ整合性検証
-    /// 長さ0もしくは長さの一致しないデータを検出した時点で強制終了
-    ///
-    fn integrity_check(&self) -> Result<&Self, &str> {
-        if self.data.len() == 0 {
-            return Err("zero matrix length detected");
-        }
-        for i in 0..self.data.len() {
-            let len = self.data[0].len();
-            if self.data[i].len() != len {
-                println!(
-                    "matrix corrupted at column {} (data: {:?}, length: {}, expected {})",
-                    i,
-                    self.data[i],
-                    self.data[i].len(),
-                    len
-                );
-                return Err("matrix corrupted");
-            }
-        }
-        Ok(&self)
-    }
-
-    /// 行の存在性検証
-    /// 行の値をusizeで指定し、行列の高さに収まるかどうかを検証。
-    /// 結果をResult型にオブジェクト参照を格納して返却
-    ///
-    fn row_check(&self, row: usize) -> Result<&Self, &str> {
-        match row < self.data.len() {
-            true => Ok(&self),
-            false => Err("row is out of order"),
-            _ => panic!("unconditional row check error"),
-        }
-    }
-
-    /// 列の存在性検証
-    /// 列の値をusizeで指定し、行列の幅に収まるかどうかを検証。
-    /// 結果をResult型にオブジェクト参照を格納して返却
-    ///
-    fn col_check(&self, row: usize) -> Result<&Self, &str> {
-        match row < self.data.len() {
-            true => Ok(&self),
-            false => Err("column is out of order"),
-            _ => panic!("unconditional row check error"),
-        }
-    }
-
-    /// 行・列の存在性検証
-    /// 行および列の値をusizeで指定し、行列の幅・高さに収まるかどうかを検証。
-    /// 結果をResult型にオブジェクト参照を格納して返却
-    ///
-    fn range_check(&self, row: usize, col: usize) -> Result<&Self, &str> {
-        self.row_check(row)?.col_check(col)
-    }
-
     /// 行抽出関数
     /// Vec<T>として行を返却
     ///
@@ -465,22 +410,6 @@ where
         res
     }
 
-    /// 行数表示関数
-    ///
-    fn rows(&self) -> usize {
-        self.data.len()
-    }
-
-    /// 列数表示関数
-    ///
-    fn cols(&self) -> usize {
-        if self.data.len() == 0 {
-            0
-        } else {
-            self.data[0].len()
-        }
-    }
-
     /// 正方行列判定
     ///
     /// 正方行列であるかどうかを判定し、Result型に格納したオブジェクト参照を
@@ -499,6 +428,22 @@ where
             Err("not a square matrix")
         } else {
             Ok(&self)
+        }
+    }
+
+    /// 行数表示関数
+    ///
+    fn rows(&self) -> usize {
+        self.data.len()
+    }
+
+    /// 列数表示関数
+    ///
+    fn cols(&self) -> usize {
+        if self.data.len() == 0 {
+            0
+        } else {
+            self.data[0].len()
         }
     }
 
@@ -618,6 +563,59 @@ where
             println!("{:?}", self.data);
         }
         self
+    }
+
+    /// 行列データ整合性検証
+    /// 長さ0もしくは長さの一致しないデータを検出した時点で強制終了
+    ///
+    fn integrity_check(&self) -> Result<&Self, &str> {
+        if self.data.len() == 0 {
+            return Err("zero matrix length detected");
+        }
+        for i in 0..self.data.len() {
+            let len = self.data[0].len();
+            if self.data[i].len() != len {
+                println!(
+                    "matrix corrupted at column {} (data: {:?}, length: {}, expected {})",
+                    i,
+                    self.data[i],
+                    self.data[i].len(),
+                    len
+                );
+                return Err("matrix corrupted");
+            }
+        }
+        Ok(&self)
+    }
+
+    /// 行の存在性検証
+    /// 行の値をusizeで指定し、行列の高さに収まるかどうかを検証。
+    /// 結果をResult型にオブジェクト参照を格納して返却
+    ///
+    fn row_check(&self, row: usize) -> Result<&Self, &str> {
+        match row < self.data.len() {
+            true => Ok(&self),
+            false => Err("row is out of order"),
+        }
+    }
+
+    /// 列の存在性検証
+    /// 列の値をusizeで指定し、行列の幅に収まるかどうかを検証。
+    /// 結果をResult型にオブジェクト参照を格納して返却
+    ///
+    fn col_check(&self, row: usize) -> Result<&Self, &str> {
+        match row < self.data.len() {
+            true => Ok(&self),
+            false => Err("column is out of order"),
+        }
+    }
+
+    /// 行・列の存在性検証
+    /// 行および列の値をusizeで指定し、行列の幅・高さに収まるかどうかを検証。
+    /// 結果をResult型にオブジェクト参照を格納して返却
+    ///
+    fn range_check(&self, row: usize, col: usize) -> Result<&Self, &str> {
+        self.row_check(row)?.col_check(col)
     }
 }
 
@@ -1041,7 +1039,7 @@ where
                         v.push(self.data[i][j]);
                     }
                 }
-                res.push(v);
+                res.push(v).expect("[vector length error] failed to construct new matrix");
             }
         }
         for i in 0..res.data.len() {
@@ -1155,16 +1153,19 @@ where
     ///
     pub fn inverse(&self) -> Result<Self, &str> {
         match self.is_regular() {
-            Err(e) => Err("not a regular matrix"),
+            Err(_) => Err("not a regular matrix"),
             Ok(_) => {
                 let mut res = mat![T: [self.zero()]];
-                res.resize(self.rows(), self.cols());
+                res.resize(self.rows(), self.cols())
+                    .expect("[matrix resize error]: failed to generate new matrix instance for the inverse");
 
                 let det = self.det();
 
                 for i in 0..res.rows() {
                     for j in 0..res.cols() {
-                        let datum = self.adjugate(i, j).unwrap().det() / det;
+                        let datum = self.adjugate(i, j)
+                            .expect("[adjugate error] failed to get adjugate for the inverse")
+                            .det() / det;
                         if (i + j) % 2 == 0 {
                             res.data[i][j] = datum;
                         } else {
@@ -1183,7 +1184,7 @@ where
     ///
     pub fn identity(&self) -> Result<Self, &str> {
         match self.is_square() {
-            Err(e) => Err("identify matrix is not defined for a rectangle matrix"),
+            Err(_) => Err("identify matrix is not defined for a rectangle matrix"),
             Ok(_) => {
                 let mut res = self.get();
                 let one = T::from(0x1u8);
@@ -1201,7 +1202,7 @@ where
     ///
     pub fn tr(&self) -> Result<T, &str> {
         match self.is_square() {
-            Err(e) => Err("trace is not defined for a non-square matrix"),
+            Err(_) => Err("trace is not defined for a non-square matrix"),
             Ok(_) => {
                 let mut res = self.zero();
                 for i in 0..self.rows() {
@@ -1379,7 +1380,7 @@ mod tests_matrix {
             assert_eq!(a.data[2][i], p2[i]);
         }
 
-        a.row_replace(0, 2);
+        a.row_replace(0, 2).unwrap();
         for i in 0..a.data[0].len() {
             assert_eq!(a.data[0][i], p2[i]);
             assert_eq!(a.data[2][i], p0[i]);
@@ -1396,7 +1397,7 @@ mod tests_matrix {
             assert_eq!(m.data[i][2], p2[i]);
         }
 
-        m.col_replace(0, 2);
+        m.col_replace(0, 2).unwrap();
         for i in 0..m.data.len() {
             assert_eq!(m.data[i][0], p2[i]);
             assert_eq!(m.data[i][2], p0[i]);
