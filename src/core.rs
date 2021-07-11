@@ -1178,6 +1178,42 @@ where
         }
     }
 
+    /// 単位行列
+    /// 行列と同一サイズの単位行列が定義できる場合にはそれを生成し、
+    /// 新規のMatrix<T>インスタンスとしてResult型に格納して返却する
+    ///
+    pub fn identity(&self) -> Result<Self, &str> {
+        match self.is_square() {
+            Err(e) => Err("identify matrix is not defined for a rectangle matrix"),
+            Ok(_) => {
+                let mut res = self.get();
+                let one = T::from(0x1u8);
+                res.fill_zero();
+                for i in 0..res.rows(){
+                    res.data[i][i] = one;
+                }
+                Ok(res)
+            }
+        }
+    }
+
+
+    ///トレース
+    ///行列のトレースを計算し、結果をResult型に格納して返却する
+    ///
+    pub fn tr(&self) -> Result<T, &str> {
+        match self.is_square() {
+            Err(e) => Err("trace is not defined for a non-square matrix"),
+            Ok(_) => {
+                let mut res = self.zero();
+                for i in 0..self.rows() {
+                    res = res + self.data[i][i];
+                }
+                Ok(res)
+            }
+        }
+    }
+
 }
 
 impl<T> Matrix <T>
