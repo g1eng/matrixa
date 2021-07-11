@@ -1,8 +1,7 @@
-use tensors::core::{List,Matrix};
+use tensors::core::{List, Matrix};
 use tensors::mat;
 
-
-fn main(){
+fn main() {
     let mut c = mat![
         f32:
             [1.2, 3.4, 3.4, 4.5],
@@ -17,29 +16,24 @@ fn main(){
             [-1.0,3.0,1.0]
     ];
 
-
-
     println!("det for {:?} is {}.", c.dump(), c.det());
-    println!("adjugate[{},{}] for",1,2, );
+    println!("adjugate[{},{}] for", 1, 2,);
     for e in c.dump() {
-        println!("{:?}",e);
+        println!("{:?}", e);
     }
     println!("is");
-    for e in c.adjugate(1,2).unwrap().dump() {
-        println!("{:?}",e);
+    for e in c.adjugate(1, 2).unwrap().dump() {
+        println!("{:?}", e);
     }
     println!("");
     println!("d is ");
     for e in d.dump() {
-        println!("{:?}",e);
+        println!("{:?}", e);
     }
     for _ in 0..10 {
         d.set(d.inverse().unwrap().dump());
     }
-    println!("d inverse 10 is {:?}",d.dump());
-
-
-
+    println!("d inverse 10 is {:?}", d.dump());
 
     /******************************
     let mut t = Matrix::<i32>::new();
@@ -184,5 +178,4 @@ fn main(){
         matstr.push(v).expect("文字列ベクトルの長さが不正です");
     }
     matstr.print();
-
 }
