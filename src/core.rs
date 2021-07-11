@@ -27,7 +27,6 @@
 use std::ops::{Add,Sub,Mul};
 
 pub trait List<T> {
-    fn print(&self);
     fn dump(&self) -> &Vec<Vec<T>>;
     fn row(&self, num: usize) -> Vec<T>;
     fn col(&self, num: usize) -> Vec<T>;
@@ -41,7 +40,6 @@ pub trait List<T> {
     fn row_check(&self, row: usize) -> Result<&Self, &str>;
     fn col_check(&self, col: usize) -> Result<&Self, &str>;
     fn range_check(&self, row: usize, col: usize) -> Result<&Self, &str>;
-    fn debug(&mut self) -> &mut Self;
 }
 
 pub struct Matrix<T> {
@@ -68,9 +66,24 @@ impl<
         }
     }
 
+    /// データ表示関数
+    ///
+    pub fn print(&self){
+        println!("{:?}",self.data)
+    }
+
+    /// デバッガ
+    /// デバッグフラグを有効化したインスタンスを返す。
+    ///
+    fn debug(&mut self) -> &mut Self {
+        self.debug = true;
+        println!("debuging for: {:?}",self.data);
+        self
+    }
+
     /// データ追加
     /// データ末尾にVec<T>型で指定した新規列を追加。
-    /// マクロ実装の関係上、pushメソッドについてはNumber型に直に記述している。
+    /// マクロ実装の関係上、pushメソッドについてはMatrix型に直に記述している。
     ///
     pub fn push(&mut self, data: Vec<T>) -> Result<&mut Self, &str> {
         self.max += 1;
@@ -168,7 +181,8 @@ where
         Copy + 
         std::ops::Add<Output=T> +
         std::ops::Sub<Output=T> +
-        std::fmt::Debug
+        std::fmt::Debug + 
+        From<u8>
 {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -182,7 +196,7 @@ where
             panic!("row number not matched for addition");
         }
 
-        let zero = self.data[0][0]-self.data[0][0];
+        let zero = T::from(0x0u8);
         let mut res = Self::new();
         res.push(Vec::new());
 
@@ -228,7 +242,8 @@ where
         Copy + 
         std::ops::Add<Output=T> +
         std::ops::Sub<Output=T> +
-        std::fmt::Debug
+        std::fmt::Debug + 
+        From<u8>
 {
     type Output = Self;
     fn sub(self, other: Self) -> Self {
@@ -242,7 +257,7 @@ where
             panic!("row number not matched for substract");
         }
 
-        let zero = self.data[0][0]-self.data[0][0];
+        let zero = T::from(0x0u8);
         let mut res = Self::new();
         res.push(Vec::new());
 
@@ -313,7 +328,8 @@ where
         std::ops::Mul<Output=T> + 
         std::ops::Sub<Output=T> + 
         std::ops::Add<Output=T> + 
-        std::fmt::Debug
+        std::fmt::Debug + 
+        From<u8>
 {
     type Output = Self;
 
@@ -331,7 +347,7 @@ where
         let res_length: usize = self.data.len();
 
         let mut res = Self::new();
-        let zero = self.data[0][0] - self.data[0][0];
+        let zero = T::from(0x0u8);
 
         //解行列の計算
         for i in 0..self.data.len() {
@@ -363,25 +379,10 @@ impl<T> List <T> for Matrix<T>
 where
     T: std::fmt::Debug + Copy
 {
-    /// データ表示関数
-    ///
-    fn print(&self){
-        println!("{:?}",self.data)
-    }
-
     /// 行列データへのアクセサ
     /// ベクトルベクトルを返却する。
     fn dump(&self) -> &Vec<Vec<T>>{
         &self.data
-    }
-
-    /// デバッガ
-    /// デバッグフラグを有効化したインスタンスを返す。
-    ///
-    fn debug(&mut self) -> &mut Self {
-        self.debug = true;
-        println!("debuging for: {:?}",self.data);
-        self
     }
 
     /// 行列データ整合性検証
@@ -658,7 +659,10 @@ where
     std::ops::Sub<Output=T> + 
     std::ops::Mul<Output=T> + 
     std::ops::Div<Output=T> + 
-    std::fmt::Display + std::fmt::Debug + PartialEq
+    std::fmt::Display + 
+    std::fmt::Debug + 
+    PartialEq + 
+    From<u8>
 {
 
     /// ゼロ値取得関数
@@ -667,14 +671,14 @@ where
         if self.data.len() == 0 {
             panic!("no zero value defined for a blank matrix")
         }
-        self.data[0][0] - self.data[0][0]
+        T::from(0x0u8)
     }
 
     /// ゼロ充填
     /// 型Tにおけるゼロ値で全データを更新
     ///
     fn fill_zero(&mut self) -> &mut Self {
-        let zero = self.zero();
+        let zero = T::from(0x0u8);
         for i in 0..self.data.len(){
             for j in 0..self.data[0].len(){
                 self.data[i][j] = zero;
@@ -926,7 +930,7 @@ where
     ///     }
     /// }
     /// ```
-    pub fn prod (&self, m: Matrix<T>) -> Result<Matrix<T>,&str> {
+    pub fn prod (&self, m: Matrix<T>) -> Result<Self,&str> {
         self.integrity_check().unwrap();
         m.integrity_check().unwrap();
 
@@ -970,7 +974,7 @@ where
     /// }
     /// ```
     ///
-    pub fn hadamard (&self, m: Matrix<T>) -> Result<Matrix<T>,&str> {
+    pub fn hadamard (&self, m: Matrix<T>) -> Result<Self, &str> {
         self.integrity_check()
             .expect("origin matrix corrupted for hadamard product");
         m.integrity_check()
@@ -1022,7 +1026,7 @@ where
     /// }
     /// ```
     ///
-    pub fn adjugate(&self, p: usize, q: usize) -> Result<Matrix<T>,&str> {
+    pub fn adjugate(&self, p: usize, q: usize) -> Result<Self ,&str> {
         self.integrity_check().unwrap();
         self.range_check(p,q).unwrap();
         let mut res = Matrix::<T>::new();
@@ -1148,7 +1152,7 @@ where
     /// }
     /// ```
     ///
-    pub fn inverse(&self) -> Result<Matrix<T>,&str> {
+    pub fn inverse(&self) -> Result<Self, &str> {
         match self.is_regular() {
             Err(e) => Err("not a regular matrix"),
             Ok(_) => {
@@ -1173,7 +1177,6 @@ where
             }
         }
     }
-
 
 }
 

@@ -19,7 +19,7 @@ fn main(){
 
 
 
-    println!("determinant for {:?} is {}.", c.dump(), c.determinant());
+    println!("det for {:?} is {}.", c.dump(), c.det());
     println!("adjugate[{},{}] for",1,2, );
     for e in c.dump() {
         println!("{:?}",e);
@@ -33,10 +33,10 @@ fn main(){
     for e in d.dump() {
         println!("{:?}",e);
     }
-    println!("d inverse is ");
-    for e in d.inverse().unwrap().dump() {
-        println!("{:?}",e);
+    for _ in 0..10 {
+        d.set(d.inverse().unwrap().dump());
     }
+    println!("d inverse 10 is {:?}",d.dump());
 
 
 
@@ -165,4 +165,24 @@ fn main(){
     let z = x * y;
     z.print();
     ******************************/
+
+    let s = mat![
+        &str:
+            ["これは","事例"],
+            ["特に","重要"]
+    ];
+    s.print();
+
+    let mut matstr = mat![String];
+    for e in s {
+        let mut v = Vec::new();
+        for p in e {
+            let mut q = String::from(p);
+            q.push_str("オッケー");
+            v.push(q);
+        }
+        matstr.push(v).expect("文字列ベクトルの長さが不正です");
+    }
+    matstr.print();
+
 }
