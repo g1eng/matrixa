@@ -1243,7 +1243,7 @@ where
 
 #[cfg(test)]
 mod tests_matrix {
-    use crate::{List,Matrix};
+    use crate::core::{List,Matrix};
 
     #[test]
     fn test_new_i32(){
@@ -1432,7 +1432,7 @@ mod tests_matrix {
 
 #[cfg(test)]
 mod tests_matrix_operation {
-    use crate::{Matrix};
+    use crate::core::Matrix;
 
     #[test]
     fn test_add(){
