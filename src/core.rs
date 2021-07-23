@@ -1422,9 +1422,56 @@ mod tests_matrix {
     }
 }
 
+
 #[cfg(test)]
-mod tests_matrix_operation {
+mod tests_matrix_operator {
     use crate::core::Matrix;
+
+    #[test]
+    fn test_plus() {
+        let m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
+        let n = mat![i32: [2,3,4],[5,6,7],[8,9,10]];
+        let res = mat![i32: [3,5,7],[9,11,13],[15,17,19]];
+        let e = m + n;
+        for i in 0..e.data.len() {
+            for j in 0..e.data[0].len() {
+                assert_eq!(e.data[i][j], res.data[i][j]);
+            }
+        }
+    }
+
+    #[test]
+    fn test_minus() {
+        let m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
+        let n = mat![i32: [2,3,4],[5,6,7],[8,9,10]];
+        let res = mat![i32: [-1,-1,-1],[-1,-1,-1],[-1,-1,-1]];
+        let e = m - n;
+        for i in 0..e.data.len() {
+            for j in 0..e.data[0].len() {
+                assert_eq!(e.data[i][j], res.data[i][j]);
+            }
+        }
+    }
+
+    #[test]
+    fn test_astar() {
+        let m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
+        let n = mat![i32: [2,3,4],[5,6,7],[8,9,10]];
+        let res = mat![i32: [36,42,48],[81,96,111],[126,150,174]];
+        let e = m * n;
+        for i in 0..e.data.len() {
+            for j in 0..e.data[0].len() {
+                assert_eq!(e.data[i][j], res.data[i][j]);
+            }
+        }
+    }
+
+}
+
+#[cfg(test)]
+mod tests_matrix_manipulation {
+    use crate::core::Matrix;
+    use crate::core::List;
 
     #[test]
     fn test_add() {
@@ -1550,5 +1597,63 @@ mod tests_matrix_operation {
                 [1,1]
         ];
         m.det();
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_is_not_regular(){
+        let m = mat![
+            i32:
+                [1,1],
+                [1,1]
+        ];
+        m.is_regular().unwrap();
+    }
+
+    #[test]
+    fn test_adjugate(){
+        let m = mat![
+            i32:
+                [1,2,3],
+                [4,5,7],
+                [9,17,13289]
+        ];
+        let res = mat![
+            i32:
+                [1,-3],
+                [-9,13289]
+        ];
+        let adj = m.adjugate(1,1).unwrap();
+        assert_eq!(adj.rows(), 2);
+        assert_eq!(adj.cols(), 2);
+        for i in 0..adj.rows() {
+            for j in 0..adj.cols() {
+                assert_eq!(adj.dump()[i][j], res.dump()[i][j]);
+            }
+        }
+    }
+
+    #[test]
+    fn test_inverse(){
+        let d = mat![
+           f64:
+               [1.0,2.0,0.0],
+               [3.0,1.0,2.0],
+               [-1.0,3.0,1.0]
+        ];
+        let result = d.inverse().unwrap().get();
+        let result_cmp = mat![
+           f64:
+               [0.3333333333333333, 0.13333333333333333, -0.26666666666666666],
+               [0.3333333333333333, -0.06666666666666667, 0.13333333333333333],
+               [-0.6666666666666666, 0.3333333333333333, 0.3333333333333333]
+        ];
+
+        for i in 0..result.rows() {
+            println!("{:?}",result.col(i));
+            for j in 0..result.cols() {
+                assert_eq!(result.dump()[i][j], result_cmp.dump()[i][j]);
+            }
+        }
     }
 }
