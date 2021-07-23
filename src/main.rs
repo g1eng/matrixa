@@ -1,5 +1,5 @@
-use tensors::core::{List, Matrix};
-use tensors::mat;
+use matrixa::core::{List, Matrix};
+use matrixa::mat;
 
 fn main() {
     let c = mat![
@@ -25,7 +25,7 @@ fn main() {
     for e in c.adjugate(1, 2).unwrap().dump() {
         println!("{:?}", e);
     }
-    println!("");
+    println!();
     println!("d is ");
     for e in d.dump() {
         println!("{:?}", e);

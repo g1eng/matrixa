@@ -1,4 +1,4 @@
-//! Tensors is a simple matrix manipulation library which supports
+//! Matrixa is a simple matrix manipulation library which supports
 //! row and column matrix manipulations, scalar manipulation,
 //! mathematical manipulation, filtering and parsing mechanisms for
 //! various type of data stored in vector of vector (Vec<Vec<T>>).
@@ -7,8 +7,8 @@
 //! 行列と引数によっては演算が定義されないものについてResult型を返却する。
 //!
 //! ```rust
-//! use tensors::core::{List,Matrix};
-//! use tensors::mat;
+//! use matrixa::core::{List,Matrix};
+//! use matrixa::mat;
 //!
 //!  let mut im = Matrix::<i32>::new();
 //!  let mut fm = mat![f32: [1.0,2.0,3.0]];
@@ -105,8 +105,8 @@ impl<T: std::fmt::Debug> Matrix<T> {
 /// 行列インスンタンス初期化用マクロ
 ///
 /// ```rust
-/// use tensors::core::{List,Matrix};
-/// use tensors::mat;
+/// use matrixa::core::{List,Matrix};
+/// use matrixa::mat;
 ///
 ///  let mut im = mat![i32];
 ///  let fm = mat![
@@ -155,8 +155,8 @@ macro_rules! mat {
 /// 行および列の数が一致しない行列が指定された場合はパニックする。
 ///
 /// ```rust
-/// use tensors::core::{List,Matrix};
-/// use tensors::mat;
+/// use matrixa::core::{List,Matrix};
+/// use matrixa::mat;
 ///
 /// let m = mat![i32:[1,2],[3,4]];
 /// let n = mat![i32:[-5,6],[7,-8]];
@@ -211,8 +211,8 @@ where
 /// 行および列の数が一致しない行列が指定された場合はパニックする。
 ///
 /// ```rust
-/// use tensors::core::{List,Matrix};
-/// use tensors::mat;
+/// use matrixa::core::{List,Matrix};
+/// use matrixa::mat;
 ///
 /// let m = mat![i32:[1,2],[3,4]];
 /// let n = mat![i32:[-5,6],[7,-8]];
@@ -269,8 +269,8 @@ where
 /// パニックする。
 ///
 /// ```rust
-/// use tensors::core::{List,Matrix};
-/// use tensors::mat;
+/// use matrixa::core::{List,Matrix};
+/// use matrixa::mat;
 ///
 /// let mut m = mat![
 ///     i32:
@@ -416,8 +416,8 @@ where
     /// 返却する
     ///
     /// ```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     ///
     /// let m = mat![i32: [1,2,3], [2,3,4],[3,4,5]];
     /// m.is_square().unwrap();
@@ -509,8 +509,8 @@ where
     /// 転置行列でデータを更新し、オブジェクト参照を返却する。
     ///
     ///```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     ///        let mut m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
     ///        assert_eq!(m.rows(),3);
     ///        assert_eq!(m.cols(),5);
@@ -623,8 +623,8 @@ where
 /// Matrix はIterator を実装しており、for文等での数え上げに使える。
 ///
 /// ```rust
-/// use tensors::core::{List,Matrix};
-/// use tensors::mat;
+/// use matrixa::core::{List,Matrix};
+/// use matrixa::mat;
 ///
 /// let m = mat![i32: [1,2,3],[4,5,6]];
 /// let v = vec![vec![1,2,3],vec![4,5,6]];
@@ -699,8 +699,8 @@ where
     /// 起点となる行列は空行列であってはならない。(ゼロ値での補完が失敗する)
     ///
     /// ```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     ///
     /// let mut m = mat![i32: [1]];
     /// let mut is_first = true;
@@ -753,8 +753,8 @@ where
     /// Vec<Vec<T>>への参照として行列データをミュータブルにセットする関数。
     ///
     /// ```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     ///
     /// let mut m = mat![i32:[1]];
     /// let v = vec![
@@ -859,8 +859,8 @@ where
     /// が発生しない新規インスタンスを生成するのが便利だ。
     ///
     /// ```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     ///
     /// let x = mat![i32:[1,2,3],[1,5,6]];
     /// let y = x.get();
@@ -901,8 +901,8 @@ where
     /// を用いる場合はResult型を通じたエラー制御が可能。
     ///
     /// ```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     ///
     /// let mut m = mat![
     ///     i32:
@@ -949,8 +949,8 @@ where
     /// Result型に格納した新規インスタンスを返却する。
     ///
     /// ```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     /// let m = mat![
     ///     i32:
     ///         [1,2],
@@ -1003,8 +1003,8 @@ where
     /// 変更は行わないイミュータブルな実装。
     ///
     /// ```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     ///
     /// let m = mat![
     ///     i32:
@@ -1060,8 +1060,8 @@ where
     /// 行列式を計算し、型Tで結果を返却する
     ///
     /// ```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     ///
     /// let m = mat![
     ///     i32:
@@ -1100,8 +1100,8 @@ where
     /// オブジェクト参照を返却する。
     ///
     /// ```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     ///
     /// let r = mat![i32:[1,2],[3,4]];
     /// r.is_regular().unwrap();
@@ -1121,8 +1121,8 @@ where
     /// 正則行列でないものについてはErrを返却する。
     ///
     /// ```rust
-    /// use tensors::core::{List,Matrix};
-    /// use tensors::mat;
+    /// use matrixa::core::{List,Matrix};
+    /// use matrixa::mat;
     ///
     /// let mut d = mat![
     ///    f64:
