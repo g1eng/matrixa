@@ -1,2 +1,4 @@
 codecov:
         token: 4988186d-4164-4de5-af59-302e45c3edf2
+        ci:
+                - circleci
