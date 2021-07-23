@@ -1,7 +1,7 @@
 # About
 
-matrixa.rs is a casual numeric calculation library, especially features on matrix and list manipulation.
-Is supports various mathematical and string manipulation for data, within the type of Matrix<T> and vector-in-vector for its internal.
+matrixa.rs is a casual numeric calculation library, especially featuring on matrix and list manipulation.
+It supports various mathematical and string manipulation for data, within the type of Matrix<T> and vector-in-vector for its internal.
 You can declare and manipulate two-dimensional matrices as an object like this:
 
 ```rust
