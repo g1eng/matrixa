@@ -72,7 +72,3 @@ This project started with three key concepts. This small mathematical library sh
   - transpose
   - fill_zero (for number matrices)
   - resize
-
-# Community
-
-* Discord
