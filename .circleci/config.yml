@@ -11,5 +11,23 @@ jobs:
     steps:
       - checkout
       - run:
+          name: install tarpaulin
+          command: cargo install cargo-tarpaulin
+      - run:
           name: Run test
           command: cargo test
+      - run:
+          name: Run test
+          command: cargo tarpaulin -o Xml
+      - run:
+          name: uploade coverage to codecov
+          command: |
+                  curl -Os https://uploader.codecov.io/latest/linux/codecov
+                  curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM
+                  curl -Os https://uploader.codecov.io/latest/linux/codecov.SHA256SUM.sig
+                  curl https://keybase.io/codecovsecurity/pgp_keys.asc | gpg --import
+                  gpg --verify codecov.SHA256SUM.sig codecov.SHA256SUM
+                  shasum -a 256 -c codecov.SHA256SUM
+                  chmod +x codecov
+                  ./codecov -t $CODECOV_TOKEN
+
