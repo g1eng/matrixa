@@ -26,8 +26,11 @@
 //!
 
 use std::ops::{Add, Mul, Sub};
+use std::process::Output;
 
 pub trait List<T> {
+    fn print(&self);
+    fn push(&mut self, column: Vec<T>) -> Result<&mut Self, &str>;
     fn dump(&self) -> &Vec<Vec<T>>;
     fn row(&self, num: usize) -> Vec<T>;
     fn col(&self, num: usize) -> Vec<T>;
@@ -92,10 +95,6 @@ impl<T: std::fmt::Debug> Matrix<T> {
                 return Err("Invalid vector length");
             }
         }
-        /*
-        if self.debug {
-            println!("pushing {:?}", data);
-        }*/
 
         self.data.push(data);
         Ok(self)
@@ -151,6 +150,7 @@ macro_rules! mat {
 }
 
 /// 行列の加算
+///
 /// 行列の要素ごとの加算を行い、新規インスタンスとして結果を返却する。
 /// 行および列の数が一致しない行列が指定された場合はパニックする。
 ///
@@ -170,9 +170,9 @@ macro_rules! mat {
 /// ```
 ///
 
-impl<T: std::ops::Add<Output = T> + std::ops::Sub<Output = T>> Add for Matrix<T>
+impl<T: std::ops::Add<Output = T>> Add for Matrix<T>
 where
-    T: Copy + std::ops::Add<Output = T> + std::ops::Sub<Output = T> + std::fmt::Debug + From<u8>,
+    T: Copy + std::ops::Add<Output = T> + std::fmt::Debug + From<u8>,
 {
     type Output = Self;
     fn add(self, other: Self) -> Self {
@@ -207,6 +207,7 @@ where
 }
 
 /// 行列の減算
+///
 /// 行列の要素ごとの減算を行い、新規インスタンスとして結果を返却する。
 /// 行および列の数が一致しない行列が指定された場合はパニックする。
 ///
@@ -226,9 +227,9 @@ where
 /// ```
 ///
 
-impl<T: std::ops::Add<Output = T> + std::ops::Sub<Output = T>> Sub for Matrix<T>
+impl<T: std::ops::Sub<Output = T>> Sub for Matrix<T>
 where
-    T: Copy + std::ops::Add<Output = T> + std::ops::Sub<Output = T> + std::fmt::Debug + From<u8>,
+    T: Copy + std::ops::Sub<Output = T> + std::fmt::Debug + From<u8>,
 {
     type Output = Self;
     fn sub(self, other: Self) -> Self {
@@ -372,13 +373,38 @@ impl<T> List<T> for Matrix<T>
 where
     T: std::fmt::Debug + Copy,
 {
-    /// 行列データへのアクセサ
-    /// ベクトルベクトルを返却する。
+    /// データ表示関数
+    ///
+    fn print(&self) {
+        println!("{:?}", self.data)
+    }
+
+    /// データ追加
+    /// データ末尾にVec<T>型で指定した新規列を追加。
+    /// マクロ実装の関係上、pushメソッドについてはMatrix型に直に記述している。
+    ///
+    fn push(&mut self, data: Vec<T>) -> Result<&mut Self, &str> {
+        self.max += 1;
+
+        if self.data.len() != 0 {
+            if self.data[0].len() != data.len() {
+                //println!("Invalid vector length: {}, expected: {}",data.len(), self.data.len());
+                return Err("Invalid vector length");
+            }
+        }
+        self.data.push(data);
+        Ok(self)
+    }
+
+    /// 行列データ取得
+    ///
+    /// データペイロードとしてベクトルベクトルを返却する。
     fn dump(&self) -> &Vec<Vec<T>> {
         &self.data
     }
 
     /// 行抽出関数
+    ///
     /// Vec<T>として行を返却
     ///
     fn row(&self, num: usize) -> Vec<T> {
@@ -399,6 +425,7 @@ where
     }
 
     /// 列抽出関数
+    ///
     /// Vec<T>として列を返却
     ///
     fn col(&self, num: usize) -> Vec<T> {
@@ -506,6 +533,7 @@ where
     }
 
     /// 転置
+    ///
     /// 転置行列でデータを更新し、オブジェクト参照を返却する。
     ///
     ///```rust
@@ -566,6 +594,7 @@ where
     }
 
     /// 行列データ整合性検証
+    ///
     /// 長さ0もしくは長さの一致しないデータを検出した時点で強制終了
     ///
     fn integrity_check(&self) -> Result<&Self, &str> {
@@ -589,6 +618,7 @@ where
     }
 
     /// 行の存在性検証
+    ///
     /// 行の値をusizeで指定し、行列の高さに収まるかどうかを検証。
     /// 結果をResult型にオブジェクト参照を格納して返却
     ///
@@ -600,6 +630,7 @@ where
     }
 
     /// 列の存在性検証
+    ///
     /// 列の値をusizeで指定し、行列の幅に収まるかどうかを検証。
     /// 結果をResult型にオブジェクト参照を格納して返却
     ///
@@ -611,6 +642,7 @@ where
     }
 
     /// 行・列の存在性検証
+    ///
     /// 行および列の値をusizeで指定し、行列の幅・高さに収まるかどうかを検証。
     /// 結果をResult型にオブジェクト参照を格納して返却
     ///
@@ -620,6 +652,7 @@ where
 }
 
 /// イテレータ実装
+///
 /// Matrix はIterator を実装しており、for文等での数え上げに使える。
 ///
 /// ```rust
@@ -655,7 +688,9 @@ where
     }
 }
 
-/// 数値計算用メソッド群
+/// 数値計算用共通メソッド群
+///
+/// 整数型、浮動小数点型、虚数型に対する演算処理
 ///
 impl<T> Matrix<T>
 where
@@ -853,6 +888,7 @@ where
     }
 
     /// 複製
+    ///
     /// selfと同一のデータを有する新規インスタンスを生成する。
     /// Matrix構造体のデータはVec<VeC<T>>であるため、Copyを実装しない。
     /// そのためselfのデータを利用して各種操作を行うためには、所有権の移転
@@ -893,6 +929,7 @@ where
     }
 
     /// 積
+    ///
     /// 引数として与えられた同一型の行列インスタンスを用いて
     /// self.data を元とする行列の積を計算し、Result型に格納した
     /// 新規インスタンスを返却する。
@@ -945,6 +982,7 @@ where
     }
 
     /// アダマール積
+    ///
     /// 行列の要素ごとの積(element-wize or pointwise product)を求め、
     /// Result型に格納した新規インスタンスを返却する。
     ///
@@ -998,6 +1036,7 @@ where
     }
 
     /// 余因子行列取得関数
+    ///
     /// 行p, 列q についての余因子行列を取得し、Result型に
     /// くるんだ Matrix<T>型として返却する。オブジェクト本体の
     /// 変更は行わないイミュータブルな実装。
@@ -1057,6 +1096,7 @@ where
     }
 
     /// 行列式
+    ///
     /// 行列式を計算し、型Tで結果を返却する
     ///
     /// ```rust
@@ -1096,6 +1136,7 @@ where
     }
 
     /// 正則行列判定
+    ///
     /// 正則行列であるかどうか調べ、Result型にくるんで
     /// オブジェクト参照を返却する。
     ///
@@ -1517,6 +1558,18 @@ mod tests_matrix_manipulation {
         for i in 0..m.data.len() {
             for j in 0..m.data[0].len() {
                 assert_eq!(m.data[i][j], res.data[i][j]);
+            }
+        }
+    }
+
+    #[test]
+    fn test_residue(){
+        let mut m = mat![i32: [1,2,3],[4,5,6],[-7,-8,-9]];
+        let result = mat![i32: [1,0,1],[0,1,0],[-1,0,-1]];
+        m.residue(2);
+        for i in 0..m.data.len() {
+            for j in 0..m.data[0].len() {
+                assert_eq!(m.data[i][j], result.data[i][j]);
             }
         }
     }
