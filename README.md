@@ -1,7 +1,8 @@
 # About
 
-matrixa.rs is a casual numeric calculation library, especially featuring on matrix and list manipulation.
-At now it is experimental and it will support various mathematical and string manipulation for data, within the type of Matrix<T> which is implemented in vector-in-vector with dynamic length of row and column.
+matrixa.rs is an experimental linear algebra library, especially featuring on matrix, list manipulation and polymorphism on Rust.
+
+It will support various mathematical and string manipulation for data, within the type of Matrix<T> which is implemented in vector-in-vector with dynamic length of row and column.
 You can declare and manipulate two-dimensional matrices as an object like this:
 
 ```rust
@@ -32,8 +33,8 @@ This project is an experimental dog food that probably tastes bad for you.
 
 The project aims to be:
 
-* casual, easy-to-use and easy-to-understand its usage and behavior
-* well-documented and maintainable for human after 10 years ahead. (just joking)
+* easy-to-use and easy-to-understand its usage and behavior
+* well-documented and maintainable for human after 10 years ahead. (joking)
 * human-friendly, with syntax sugars like +, - operators or `mat![T]`.
 
 # Features
@@ -44,6 +45,18 @@ The project aims to be:
 * Builtin integrity checker and push or merge mechanism for panic-less append of rows or columns
 * It implements Iterator. You can iterate data with a representation, such as `for d in matrix` 
 * Almost all manipulation below results a new instance which can be mutable to the next operation.
+
+
+### core manipulator or formatters:
+  - row_replace
+  - col_replace
+  - transpose
+  - fill_zero (for number matrices)
+  - resize
+
+### core matcher
+  - equal `=`
+  - not equal `!=`
 
 ### supported numerical operations
   - addition (with scalar or matrix)
@@ -68,9 +81,3 @@ The project aims to be:
   - regular matrix detector
   - trace
 
-### basic manipulator or formatters:
-  - row_replace
-  - col_replace
-  - transpose
-  - fill_zero (for number matrices)
-  - resize

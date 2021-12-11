@@ -168,10 +168,7 @@ macro_rules! mat {
     };
 }
 
-
-
-impl<T: Copy + Debug> Matrix<T>
-{
+impl<T> Matrix<T> {
     /// 行列生成
     ///
     /// 新規の行列インスタンスを生成し、空行列として返却する
@@ -185,6 +182,10 @@ impl<T: Copy + Debug> Matrix<T>
             max: 0,
         }
     }
+}
+
+impl<T: Copy + Debug> Matrix<T>
+{
     /// サイズ検証
     ///
     /// 行列のサイズを引数行列のサイズと比較し、結果をResult型にくるんで返却する。
@@ -582,7 +583,17 @@ mod tests_matrix {
         assert_eq!(m.data.len(), 3);
         assert_eq!(m.data[0].len(), 5);
         assert_eq!(m.data[2][2], 5);
-        //m.data.push(vec![5,6,7,8,9]);
+    }
+
+    #[test]
+    fn test_macro_with_string() {
+        let m = mat![
+            String:
+                [String::from("abcde"),String::from("fghij"),String::from("klmn0")],
+                [String::from("bbcde"),String::from("matched"),String::from("olmn0")]
+        ];
+        assert_eq!(m.data.len(), 2);
+        assert_eq!(m.data[0].len(), 3);
     }
 
     #[test]
@@ -597,6 +608,15 @@ mod tests_matrix {
         let n = mat![i32: [1,2,3,5,5], [3,6,1,4,2], [3,6,0,1,5]];
         assert_eq!(m.has_same_size_with(n.get()), true);
         assert_eq!(m == m, true);
+        assert_eq!(m == n, true);
+    }
+
+    #[test]
+    fn test_ne() {
+        let m = mat![i32: [1,2,3,5,5], [3,6,1,4,2], [3,6,0,1,5]];
+        let n = mat![i32: [1,2,3,5,5], [3,6,199293,4,2], [3,6,0,1,5]];
+        assert_eq!(m.has_same_size_with(n.get()), true);
+        assert_eq!(m != n, true);
     }
 
     #[test]
@@ -613,6 +633,7 @@ mod tests_matrix {
     }
 
     #[test]
+    //正しい行列(矩形)でOk返却
     fn test_integrity() {
         let m = mat![i32: [1,2,3,4,5], [2,3,4,5,6],[3,4,5,6,7]];
         m.integrity_check().unwrap();
@@ -620,7 +641,7 @@ mod tests_matrix {
 
     #[test]
     #[should_panic]
-    //ゼロ値でパニック
+    //ゼロ値でエラー返却
     fn test_integrity_error_zero() {
         let m = Matrix::<i32>::new();
         m.integrity_check().unwrap();
@@ -628,10 +649,9 @@ mod tests_matrix {
 
     #[test]
     #[should_panic]
-    //行列でないデータではパニック
+    //行列でないデータではErrを返却
     fn test_integrity_error_corrupted() {
         let mut m = Matrix::<i32>::new();
-        //privateフィールドに手動でベクトル代入
         m.data.push(vec![1, 2, 3]);
         m.data.push(vec![1, 2, 3, 4, 5]);
         m.integrity_check().unwrap();

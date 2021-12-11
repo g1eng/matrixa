@@ -4,7 +4,7 @@ use crate::mat;
 use PartialEq;
 use std::ops::{Add, Mul, Sub};
 
-/// 行列の加算
+/// Addition / 行列の加算
 ///
 /// 行列の要素ごとの加算を行い、新規インスタンスとして結果を返却する。
 /// 行および列の数が一致しない行列が指定された場合はパニックする。
@@ -51,7 +51,7 @@ impl<T: std::ops::Add<Output = T>> Add for Matrix<T>
     }
 }
 
-/// 行列の減算
+/// Subtraction / 行列の減算
 ///
 /// 行列の要素ごとの減算を行い、新規インスタンスとして結果を返却する。
 /// 行および列の数が一致しない行列が指定された場合はパニックする。
@@ -99,7 +99,7 @@ impl<T: std::ops::Sub<Output = T>> Sub for Matrix<T>
     }
 }
 
-/// 積
+/// Product / 行列の積
 ///
 /// 行列の積の計算を行い、新規インスタンスとして結果を返却する。
 /// 積の定義されない(不正な行・列の)組み合わせの行列が指定された場合は
@@ -204,7 +204,7 @@ impl<
 
 
 
-/// 数値計算用共通メソッド群
+/// methods for numeric calculation / 数値計算用共通メソッド群
 ///
 /// 整数型、浮動小数点型、虚数型に対する演算処理
 ///
@@ -242,7 +242,7 @@ where
         self
     }
 
-    /// 数値行列用サイズ変更
+    /// Size-adjustment for matrix / 数値行列用サイズ変更
     ///
     /// usize型で行x列サイズを指定し、selfのデータサイズを変更する。
     /// サイズが縮小する行・列についてはデータを破棄し、
@@ -727,12 +727,13 @@ where
     }
 }
 
+/// numeric calculation for integers / 整数型向け演算処理
+///
 impl<T: std::ops::Rem<Output = T>> Matrix<T>
     where
         T: Copy + std::ops::Rem<Output = T> + std::fmt::Display + std::fmt::Debug,
 {
-    /// スカラー剰余計算
-    /// int系の型のみサポート
+    /// Residue by scalar / スカラー剰余計算
     ///
     pub fn residue(&mut self, val: T) -> &mut Self {
         for i in 0..self.data.len() {
@@ -742,6 +743,7 @@ impl<T: std::ops::Rem<Output = T>> Matrix<T>
         }
         self
     }
+
 }
 
 impl<T: std::ops::Rem<Output = T>> Rem for Matrix<T>
@@ -849,9 +851,9 @@ mod tests_matrix_manipulation {
     #[test]
     fn test_rem(){
         let m = mat![i32: [1,2,3],[4,5,6],[-7,-8,-9]];
-        let other = mat![i32: [-7,-8,-9],[6,5,4],[3,2,1]];
+        let n = mat![i32: [-7,-8,-9],[6,5,4],[3,2,1]];
         let result = mat![i32: [1,2,3],[4,0,2],[-1,0,0]];
-        let m = m % other;
+        let m = m % n;
         assert_eq!(m == result, true)
     }
 
