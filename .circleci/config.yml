@@ -11,14 +11,14 @@ jobs:
     steps:
       - checkout
       - run:
-          name: install tarpaulin
-          command: cargo install cargo-tarpaulin
+          name: install grcov
+          command: cargo install grcov
       - run:
           name: Run test
           command: cargo test
       - run:
-          name: Run test
-          command: cargo tarpaulin -o Xml
+          name: Get coverage test
+          command: grcov . > coverage/lcov.info
       - run:
           name: uploade coverage to codecov
           command: |

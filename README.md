@@ -1,30 +1,33 @@
 # About
 
-matrixa.rs is an experimental linear algebra library, especially featuring on matrix, list manipulation and polymorphism on Rust.
+matrixa.rs is an experimental linear algebra library, especially featuring on matrix, list manipulation on Rust.
 
-It will support various mathematical and string manipulation for data, within the type of Matrix<T> which is implemented in vector-in-vector with dynamic length of row and column.
+It supports mathematical and string manipulation for data, within the type of `Matrix<T>` which holds the payload in vector-in-vector with dynamic length of row and column.
 You can declare and manipulate two-dimensional matrices as an object like this:
 
 ```rust
-// for i32
-use matrixa::core::{List,Matrix};
+use matrixa::core::Matrix;
 use matrixa::mat;
 
+// i32
 let mut im = Matrix::<i32>::new();
 im.push(vec![1,2,3,4,5]).unwrap().push(vec![5,6,7,8,9]).unwrap();
 im.add(1).print();
 im.mul(3).print();
 
-// for f32
-  
-let mut fm = mat![f32: 
+// f32
+let fm1 = mat![
+  f32:
   [1.0,2.0,3.0],
-  [2.0,3.0,4.0],
+  [2.0,3.0,4.0]
 ];
-fm.debug()
-    .push(vec![1.23,4.56,7.89])
-    .unwrap();
-fm.print();
+let fm2 = mat![
+  f32:
+  [1.1,2.2,3.3],
+  [2.2,3.3,4.4]
+];
+let fm = fm1 + fm2;
+fm.print()
 ```
 
 # Concepts
@@ -34,7 +37,7 @@ This is a dog food that probably tastes bad for you.
 The project aims to be:
 
 * easy-to-use and easy-to-understand its usage and behavior
-* well-documented and maintainable for human after 10 years ahead. (joking)
+* well-documented and maintainable.
 * human-friendly, with syntax sugars like +, - operators or `mat![T]`.
 
 # Features
@@ -65,16 +68,19 @@ The project aims to be:
   
 ## Numerical operations
 
-### supported numerical operations
+### Supported numerical operations
 
-| category | operator | with scalar | with matrix | 
+| category | operator | scalar | matrix | 
 | --- | --- | --- | --- | 
-| addition | + | O | O |
-| subtraction | - | O | O |
-| product | * | O | O |
-| hadamard product |  | | O |
-| division | / | O | O |
-| rem | % | O | O |
+| addition | + | O* | O |
+| subtraction | - | O* | O |
+| product | * | O* | O |
+| hadamard product |  | | O* |
+| division | / | O* | O |
+| rem | % | O* | O |
+
+* O: supported
+* O*: supported via method
 
 ### supported matrices to generate for:
   - inverse matrix

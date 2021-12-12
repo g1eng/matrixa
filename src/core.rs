@@ -656,7 +656,7 @@ mod tests_matrix {
         let p = mat![
             &str:
                 ["abcde","fghij","klmn0"],
-                ["abcde","matched","olmn0"]
+                ["bbcde","NOT matched","olmn0"]
         ];        assert_eq!(m.data.len(), 2);
         assert_eq!(m.data[0].len(), 3);
         assert_eq!(m == m, true);
