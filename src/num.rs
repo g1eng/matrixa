@@ -1,4 +1,4 @@
-use std::ops::Rem;
+use std::ops::{Div, Rem};
 use crate::core::Matrix;
 use crate::mat;
 use PartialEq;
@@ -83,15 +83,10 @@ impl<T: std::ops::Sub<Output = T>> Sub for Matrix<T>
             panic!("abort");
         }
 
-        let zero = T::from(0x0u8);
-        let mut res = Self::new();
+        let mut res = self.clone();
 
-        for i in 0..self.data.len() {
-            if i >= res.data.len() {
-                res.data.push(Vec::new());
-            }
-            for j in 0..self.data[0].len() {
-                res.data[i].push(zero);
+        for i in 0..res.data.len() {
+            for j in 0..res.data[0].len() {
                 res.data[i][j] = self.data[i][j] - other.data[i][j];
             }
         }
@@ -201,6 +196,61 @@ impl<
         res
     }
 }
+
+
+/// Division / 商
+///
+/// 行列の要素ごとの商を計算し、新規インスタンスとして結果を返却する。
+///
+/// ```rust
+/// use matrixa::core::Matrix;
+/// use matrixa::mat;
+///
+/// let mut m = mat![
+///     i32:
+///         [10,20,30],
+///         [40,50,70]
+/// ];
+/// let n = mat![
+///     i32:
+///         [1,2,3],
+///         [5,6,7]
+/// ];
+/// let res = mat![
+///     i32:
+///         [10,10,10],
+///         [8,8,10]
+/// ];
+///
+/// let p = m / n;
+///
+/// assert_eq!(p.rows(),2);
+/// assert_eq!(p.cols(),3);
+/// for i in 0..p.rows() {
+///     for j in 0..p.cols() {
+///         assert_eq!(p.dump()[i][j], res.dump()[i][j]);
+///     }
+/// }
+/// ```
+///
+impl<T: Copy + std::ops::Div<Output = T> + std::fmt::Debug> Div for Matrix<T>{
+    type Output = Self;
+    fn div(self, other: Self) -> Self::Output {
+        if !self.has_same_size_with(other.clone()) {
+            panic!("abort");
+        }
+
+        let mut res = self.clone();
+
+        for i in 0..res.data.len() {
+            for j in 0..self.data[0].len() {
+                res.data[i][j] = res.data[i][j] / other.data[i][j];
+            }
+        }
+        res
+    }
+}
+
 
 
 
@@ -833,7 +883,23 @@ mod tests_matrix_manipulation {
     }
 
     #[test]
-    fn test_div() {
+    fn test_div_i32() {
+        let mut m = mat![i32: [10,20,30],[40,50,60],[70,80,89]];
+        let n = mat![i32: [2,4,6],[8,10,12],[14,16,18]];
+        let res = mat![i32: [5,5,5],[5,5,5],[5,5,4]];
+        assert_eq!(m / n == res, true)
+    }
+
+    #[test]
+    fn test_div_f32() {
+        let mut m = mat![f32: [1.0,2.0,3.0],[4.0,5.0,6.0],[7.0,8.0,9.0]];
+        let n = mat![f32: [2.0,4.0,6.0],[8.0,10.0,12.0],[14.0,16.0,1.8]];
+        let res = mat![f32: [0.5,0.5,0.5],[0.5,0.5,0.5],[0.5,0.5,5.0]];
+        assert_eq!(m / n == res, true)
+    }
+
+    #[test]
+    fn test_div_scalar() {
         let mut m = mat![i32: [2,4,6],[8,10,12],[14,16,18]];
         let res = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
         m.div(2);
