@@ -1,10 +1,6 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine. See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-# Use a package of configuration called an orb.
-  # Declare a dependency on the welcome-orb
-# Orchestrate or s
 jobs:
-  test_and_report:
+  build:
     working_directory: ~/repo
     docker:
       - image: circleci/rust:buster
@@ -30,4 +26,3 @@ jobs:
                   shasum -a 256 -c codecov.SHA256SUM
                   chmod +x codecov
                   ./codecov -t $CODECOV_TOKEN
-
