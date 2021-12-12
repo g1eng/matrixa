@@ -37,7 +37,7 @@ This is a dog food that probably tastes bad for you.
 The project aims to be:
 
 * easy-to-use and easy-to-understand its usage and behavior
-* well-documented and maintainable.
+* well-documented and maintainable for us, rustacenes.
 * human-friendly, with syntax sugars like +, - operators or `mat![T]`.
 
 # Features
@@ -101,6 +101,6 @@ The project aims to be:
   - regular matrix detector
   - trace
 
-### supported string operation
+## string operation
 
 WIP
