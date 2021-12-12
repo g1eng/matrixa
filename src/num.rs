@@ -1,4 +1,4 @@
-use std::ops::{Div, Rem};
+use std::ops::{Div, Rem, Shl, Shr};
 use crate::core::Matrix;
 use crate::mat;
 use PartialEq;
@@ -251,7 +251,35 @@ impl<T: Copy + std::ops::Div<Output = T> + std::fmt::Debug> Div for Matrix<T>{
     }
 }
 
+/// 左ビットシフト演算 / left shift operator
+impl<T: Copy + std::ops::Shl<Output = T>> Shl for Matrix<T> {
+    type Output = Self;
 
+    fn shl(self, other: Self) -> Self::Output {
+        let mut res = self.clone();
+        for i in 0..res.data.len() {
+            for j in 0..res.data[i].len() {
+                res.data[i][j] = res.data[i][j] << other.data[i][j];
+            }
+        }
+        res
+    }
+}
+
+/// 右ビットシフト演算 / left shift operator
+impl<T: Copy + std::ops::Shr<Output = T>> Shr for Matrix<T> {
+    type Output = Self;
+
+    fn shr(self, other: Self) -> Self::Output {
+        let mut res = self.clone();
+        for i in 0..res.data.len() {
+            for j in 0..res.data[i].len() {
+                res.data[i][j] = res.data[i][j] >> other.data[i][j];
+            }
+        }
+        res
+    }
+}
 
 
 /// methods for numeric calculation / 数値計算用共通メソッド群
@@ -853,8 +881,35 @@ mod tests_matrix_numeric_operator {
 
 }
 
+mod tests_matrix_bitshift_operator {
+    use crate::core::Matrix;
+    use crate::mat;
+
+    #[test]
+    fn test_shl() {
+        let m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
+        let b = mat![i32: [1,1,1],[1,1,1],[1,1,2]];
+        let res = mat![i32: [2,4,6],[8,10,12],[14,16,36]];
+        assert_eq!(m << b == res, true)
+    }
+
+    #[test]
+    fn test_shr() {
+        let m = mat![i32: [2,2,3],[4,5,6],[7,8,9]];
+        let b = mat![i32: [1,1,1],[1,1,1],[1,1,2]];
+        let res = mat![i32: [1,1,1],[2,2,3],[3,4,2]];
+        for i in 0..m.data.len() {
+            for j in 0..m.data[i].len() {
+                print!("{:},",m.data[i][j] >> b.data[i][j]);
+            }
+            println!();
+        }
+        assert_eq!(m >> b == res, true);
+    }
+}
+
 #[cfg(test)]
-mod tests_matrix_manipulation {
+mod tests_matrix_numeric_manipulation {
     use crate::core::Matrix;
     use crate::mat;
 
@@ -884,7 +939,7 @@ mod tests_matrix_manipulation {
 
     #[test]
     fn test_div_i32() {
-        let mut m = mat![i32: [10,20,30],[40,50,60],[70,80,89]];
+        let m = mat![i32: [10,20,30],[40,50,60],[70,80,89]];
         let n = mat![i32: [2,4,6],[8,10,12],[14,16,18]];
         let res = mat![i32: [5,5,5],[5,5,5],[5,5,4]];
         assert_eq!(m / n == res, true)
@@ -892,7 +947,7 @@ mod tests_matrix_manipulation {
 
     #[test]
     fn test_div_f32() {
-        let mut m = mat![f32: [1.0,2.0,3.0],[4.0,5.0,6.0],[7.0,8.0,9.0]];
+        let m = mat![f32: [1.0,2.0,3.0],[4.0,5.0,6.0],[7.0,8.0,9.0]];
         let n = mat![f32: [2.0,4.0,6.0],[8.0,10.0,12.0],[14.0,16.0,1.8]];
         let res = mat![f32: [0.5,0.5,0.5],[0.5,0.5,0.5],[0.5,0.5,5.0]];
         assert_eq!(m / n == res, true)
