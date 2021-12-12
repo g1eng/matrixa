@@ -125,15 +125,16 @@ impl<T: Copy + std::cmp::PartialEq + std::fmt::Debug> PartialEq for Matrix<T>
 /// use matrixa::mat;
 ///
 ///  let mut im = mat![i32];
+///  assert_eq!(im.rows(), 0);
+///  im.print();
+///
 ///  let fm = mat![
 ///     f32:
 ///         [1.0,2.0,3.0]
 ///  ];
-///  assert_eq!(im.rows(), 0);
 ///  assert_eq!(fm.cols(), 3);
 ///  assert_eq!(fm.row(0)[2], 3.0);
 ///
-///  im.print();
 ///  fm.print();
 /// ```
 
@@ -550,6 +551,31 @@ impl<T> Matrix<T>
     }
 }
 
+
+/// 変換系メソッド群 / conversion methods
+///
+/// 異なる型を元とする行列への型変換を行う関数群。
+///
+impl<T: Copy + ToString> Matrix<T> {
+    /// 文字列行列への変換 / conversion to String matrix
+    ///
+    /// ToStringを実装する元を有する行列について、全要素をString型に変換したMatrix<String>を返却。
+    ///
+    pub fn to_string(&self) -> Matrix<String> {
+        let mut res = mat![String];
+        for i in 0..self.data.len() {
+            res.data.push(Vec::new());
+            for j in 0..self.data.len() {
+                res.data[i].push(self.data[i][j].to_string());
+            }
+        }
+        res
+    }
+}
+
+
+
+
 #[cfg(test)]
 mod tests_matrix {
     use crate::core::Matrix;
@@ -841,3 +867,25 @@ mod tests_matrix {
     }
 }
 
+#[cfg(test)]
+mod tests_matrix_conversion {
+    use crate::core::Matrix;
+    use crate::mat;
+
+    #[test]
+    fn test_to_string(){
+        let m = mat![i32: [2,2,3],[4,5,6],[7,8,9]];
+        let res = mat![
+            &str:
+            ["2","2","3"],
+            ["4","5","6"],
+            ["7","8","9"]
+        ];
+        let s = m.to_string();
+        for i in 0..s.data.len() {
+            for j in 0..s.data[i].len() {
+                assert_eq!(s.data[i][j].as_str() == res.data[i][j], true);
+            }
+        }
+    }
+}

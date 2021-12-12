@@ -1,6 +1,6 @@
-use std::ops::{BitAnd, BitOr, BitXor, Not};
 use crate::core::Matrix;
 use crate::mat;
+use std::ops::{BitAnd, BitOr, BitXor, Not};
 
 /// 論理積 / logical product
 ///
