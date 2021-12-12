@@ -44,7 +44,7 @@ The project aims to be:
 
 * You can create Matrix<T> instance for matrix declaration and its manipulation.
 * `Matrix::<T>::new()` or easy-to-use `!mat[T]` macro for the constructor.
-* A matrix instance can be typed with integer such as i32, floating point such as f32, bool, or reference to string literal (&str).
+* A matrix instance can be typed with integer such as i32, floating point such as f32, bool, reference to sized string literal (&str) or String.
 * Builtin integrity checker and push or merge mechanism for panic-less append of rows or columns
 * It implements Clone. You can assign a matrix to another using `=` operator or generate clone instance with `clone()`.
 * It implements Iterator. You can iterate data with a representation, such as `for d in matrix` 
@@ -82,6 +82,15 @@ The project aims to be:
 * O: supported
 * O*: supported via method
 
+### Supported bool operations
+
+| category | operator | description |
+| --- | --- | --- |
+| bit and | & | logical product of two matrices |
+| bit or | \| | logical sum of two matrices |
+| bit xor | ^ | exclusive disjunction |
+| not | ! | negation |
+
 ### supported matrices to generate for:
   - inverse matrix
   - identity matrix
@@ -95,4 +104,3 @@ The project aims to be:
 ### supported string operation
 
 WIP
-
