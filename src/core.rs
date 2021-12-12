@@ -58,8 +58,7 @@ pub struct Matrix<T> {
 /// ```
 ///
 impl<T> Iterator for Matrix<T>
-    where
-        T: Clone,
+where T: Clone,
 {
     type Item = Vec<T>;
     fn next(&mut self) -> Option<Vec<T>> {
@@ -92,10 +91,9 @@ impl<T> Iterator for Matrix<T>
 /// ```
 ///
 impl<T: Copy + std::cmp::PartialEq + std::fmt::Debug> PartialEq for Matrix<T>
-    where
 {
     fn eq(&self, other: &Self) -> bool {
-        if !self.has_same_size_with(other.get()) {
+        if !self.has_same_size_with(other.clone()) {
             return false
         }
 
@@ -184,7 +182,7 @@ impl<T> Matrix<T> {
     }
 }
 
-impl<T: Copy + Debug> Matrix<T>
+impl<T: Debug> Matrix<T>
 {
     /// サイズ検証
     ///
@@ -213,19 +211,21 @@ impl<T: Copy + Debug> Matrix<T>
             _ => true,
         }
     }
+}
+
+impl<T: Copy> Clone for Matrix<T> {
     /// 複製
     ///
     /// selfと同一のデータを有する新規インスタンスを生成する。
-    /// Matrix構造体のデータはVec<Vec<T>>であるため、Copyを実装しない。
-    /// そのためselfのデータを利用して各種操作を行うためには、所有権の移転
-    /// が発生しない新規インスタンスを生成するのが便利だ。
+    /// TがCopyを実装する場合、Matrix構造体のデータはVec<Vec<T>>であるためCloneを実装する。
+    /// selfの保持するデータと同一のデータを保持する新規インスタンスを生成することができる。
     ///
     /// ```rust
     /// use matrixa::core::Matrix;
     /// use matrixa::mat;
     ///
     /// let x = mat![i32:[1,2,3],[1,5,6]];
-    /// let y = x.get();
+    /// let y = x.clone();
     ///
     /// for i in 0..y.rows() {
     ///     for j in 0..y.cols() {
@@ -238,14 +238,11 @@ impl<T: Copy + Debug> Matrix<T>
     ///
     /// ```
     ///
-    pub fn get(&self) -> Matrix<T> {
+    fn clone(&self) -> Matrix<T> {
         let mut res = Matrix::new();
 
         for i in 0..self.data.len() {
-            res.data.push(Vec::new());
-            for j in 0..self.data[i].len() {
-                res.data[i].push(self.data[i][j])
-            }
+            res.data.push(self.data[i].clone());
         }
         res
     }
@@ -298,6 +295,7 @@ impl<T: std::fmt::Debug> Matrix<T> {
 }
 
 /// [行列一般] 基本メソッド群
+///
 /// 数値行列および文字行列のいずれにも対応したメソッドを定義。
 ///
 impl<T> Matrix<T>
@@ -341,8 +339,7 @@ impl<T> Matrix<T>
 
     /// 正方行列判定
     ///
-    /// 正方行列であるかどうかを判定し、Result型に格納したオブジェクト参照を
-    /// 返却する
+    /// 正方行列であるかどうかを判定し、Result型に格納したオブジェクト参照を返却する
     ///
     /// ```rust
     /// use matrixa::core::Matrix;
@@ -586,6 +583,18 @@ mod tests_matrix {
     }
 
     #[test]
+    fn test_macro_with_str() {
+        let m = mat![
+            &str:
+                ["abcde","fghij","klmn0"],
+                ["bbcde","matched","olmn0"]
+        ];
+        assert_eq!(m.data.len(), 2);
+        assert_eq!(m.data[0].len(), 3);
+        assert_eq!(m == m, true);
+    }
+
+    #[test]
     fn test_macro_with_string() {
         let m = mat![
             String:
@@ -594,6 +603,19 @@ mod tests_matrix {
         ];
         assert_eq!(m.data.len(), 2);
         assert_eq!(m.data[0].len(), 3);
+    }
+
+    #[test]
+    fn test_macro_with_bool() {
+        let m = mat![
+            bool:
+                [true,true,false,true,false],
+                [true,false,false,true,true],
+                [false,false,true,true,true],
+                [false,true,true,false,true]
+        ];
+        assert_eq!(m.data.len(), 4);
+        assert_eq!(m.data[0].len(), 5);
     }
 
     #[test]
@@ -606,7 +628,7 @@ mod tests_matrix {
     fn test_eq() {
         let m = mat![i32: [1,2,3,5,5], [3,6,1,4,2], [3,6,0,1,5]];
         let n = mat![i32: [1,2,3,5,5], [3,6,1,4,2], [3,6,0,1,5]];
-        assert_eq!(m.has_same_size_with(n.get()), true);
+        assert_eq!(m.has_same_size_with(n.clone()), true);
         assert_eq!(m == m, true);
         assert_eq!(m == n, true);
     }
@@ -615,8 +637,59 @@ mod tests_matrix {
     fn test_ne() {
         let m = mat![i32: [1,2,3,5,5], [3,6,1,4,2], [3,6,0,1,5]];
         let n = mat![i32: [1,2,3,5,5], [3,6,199293,4,2], [3,6,0,1,5]];
-        assert_eq!(m.has_same_size_with(n.get()), true);
+        assert_eq!(m.has_same_size_with(n.clone()), true);
         assert_eq!(m != n, true);
+    }
+
+    #[test]
+    fn test_eq_str() {
+        let m = mat![
+            &str:
+                ["abcde","fghij","klmn0"],
+                ["bbcde","matched","olmn0"]
+        ];
+        let n = mat![
+            &str:
+                ["abcde","fghij","klmn0"],
+                ["bbcde","matched","olmn0"]
+        ];
+        let p = mat![
+            &str:
+                ["abcde","fghij","klmn0"],
+                ["abcde","matched","olmn0"]
+        ];        assert_eq!(m.data.len(), 2);
+        assert_eq!(m.data[0].len(), 3);
+        assert_eq!(m == m, true);
+
+        assert_eq!(m.has_same_size_with(n.clone()), true);
+        assert_eq!(m == n, true);
+        assert_eq!(m != n, false);
+        assert_eq!(m == p, false);
+        assert_eq!(m != p, true);
+        assert_eq!(n == p, false);
+        assert_eq!(n != p, true);
+        println!("{}",m.data[0][0].contains("a"))
+    }
+
+    #[test]
+    fn test_assign() {
+        let m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
+        let n = m.clone();
+        let o = n;
+        assert_eq!(m == o, true);
+    }
+
+    #[test]
+    fn test_assign_str() {
+        let m = mat![
+            &str:
+            ["新宿","渋谷","代々木","神田"],
+            ["吉祥寺","飯田橋","阿佐ヶ谷","白金"],
+            ["保土ヶ谷","荻窪","墨田","北千住"]
+        ];
+        let n = m.clone();
+        let o = n;
+        assert_eq!(m == o, true);
     }
 
     #[test]

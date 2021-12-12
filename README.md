@@ -29,7 +29,7 @@ fm.print();
 
 # Concepts
 
-This project is an experimental dog food that probably tastes bad for you.
+This is a dog food that probably tastes bad for you.
 
 The project aims to be:
 
@@ -41,35 +41,40 @@ The project aims to be:
 
 * You can create Matrix<T> instance for matrix declaration and its manipulation.
 * `Matrix::<T>::new()` or easy-to-use `!mat[T]` macro for the constructor.
-* A matrix instance can be typed with i32 (or other integer types), f32 (or other float types), and sized string (&str) or String.
+* A matrix instance can be typed with integer such as i32, floating point such as f32, bool, or reference to string literal (&str).
 * Builtin integrity checker and push or merge mechanism for panic-less append of rows or columns
+* It implements Clone. You can assign a matrix to another using `=` operator or generate clone instance with `clone()`.
 * It implements Iterator. You can iterate data with a representation, such as `for d in matrix` 
 * Almost all manipulation below results a new instance which can be mutable to the next operation.
 
 
-### core manipulator or formatters:
-  - row_replace
-  - col_replace
-  - transpose
-  - fill_zero (for number matrices)
-  - resize
+## Core functionalities
 
-### core matcher
+### Core manipulator or formatters:
+* new
+* clone
+* row_replace
+* col_replace
+* transpose
+* fill_zero (for number matrices)
+* resize
+
+### Matchers
   - equal `=`
   - not equal `!=`
+  
+## Numerical operations
 
 ### supported numerical operations
-  - addition (with scalar or matrix)
-  - subtract (with scalar or matrix)
-  - product  (with scalar or matrix)
-  - hadamard product (with matrix)
-  - divide  (with scalar)
-  - residue  (with scalar integer)
 
-### supported mathematical operators
-  - addition(+) 
-  - subtract(-) 
-  - product(\*)
+| category | operator | with scalar | with matrix | 
+| --- | --- | --- | --- | 
+| addition | + | O | O |
+| subtraction | - | O | O |
+| product | * | O | O |
+| hadamard product |  | | O |
+| division | / | O | O |
+| rem | % | O | O |
 
 ### supported matrices to generate for:
   - inverse matrix
@@ -80,4 +85,8 @@ The project aims to be:
   - determinant
   - regular matrix detector
   - trace
+
+### supported string operation
+
+WIP
 

@@ -31,7 +31,7 @@ impl<T: std::ops::Add<Output = T>> Add for Matrix<T>
 {
     type Output = Self;
     fn add(self, other: Self) -> Self {
-        if !self.has_same_size_with(other.get()) {
+        if !self.has_same_size_with(other.clone()) {
             panic!("abort");
         }
 
@@ -79,7 +79,7 @@ impl<T: std::ops::Sub<Output = T>> Sub for Matrix<T>
     type Output = Self;
     fn sub(self, other: Self) -> Self {
 
-        if !self.has_same_size_with(other.get()) {
+        if !self.has_same_size_with(other.clone()) {
             panic!("abort");
         }
 
@@ -220,7 +220,7 @@ where
         + PartialEq
         + From<u8>,
 {
-    /// ゼロ値取得関数
+    /// zero acquisition / ゼロ値取得関数
     ///
     fn zero(&self) -> T {
         if self.data.len() == 0 {
@@ -229,7 +229,7 @@ where
         T::from(0x0u8)
     }
 
-    /// ゼロ充填
+    /// zero-filling / ゼロ充填
     /// 型Tにおけるゼロ値で全データを更新
     ///
     fn fill_zero(&mut self) -> &mut Self {
@@ -338,7 +338,7 @@ where
         }
     }
 
-    /// スカラー加算
+    /// scalar addition / スカラー加算
     ///
     pub fn add(&mut self, val: T) -> &mut Self {
         self.integrity_check().unwrap();
@@ -354,7 +354,7 @@ where
         self
     }
 
-    /// スカラー減算
+    /// scalar subtraction / スカラー減算
     ///
     pub fn sub(&mut self, val: T) -> &mut Self {
         self.integrity_check().unwrap();
@@ -370,7 +370,7 @@ where
         self
     }
 
-    /// スカラー乗算
+    /// scalar product / スカラー乗算
     ///
     pub fn mul(&mut self, val: T) -> &mut Self {
         self.integrity_check().unwrap();
@@ -386,8 +386,8 @@ where
         self
     }
 
-    /// スカラー除算
-    /// (i32では端数切捨て)
+    /// scalar division / スカラー除算
+    /// (整数型では端数切捨て)
     ///
     pub fn div(&mut self, val: T) -> &mut Self {
         self.integrity_check().unwrap();
@@ -403,7 +403,7 @@ where
         self
     }
 
-    /// 積
+    /// matrix product / 行列の積
     ///
     /// 引数として与えられた同一型の行列インスタンスを用いて
     /// self.data を元とする行列の積を計算し、Result型に格納した新規インスタンスを返却する。
@@ -450,10 +450,10 @@ where
             return Err("col length not matched to the row length of argument");
         }
 
-        Ok(self.get() * m)
+        Ok(self.clone() * m)
     }
 
-    /// アダマール積
+    /// hadamard product / アダマール積
     ///
     /// 行列の要素ごとの積(element-wize or pointwise product)を求め、
     /// Result型に格納した新規インスタンスを返却する。
@@ -507,7 +507,7 @@ where
         Ok(res)
     }
 
-    /// 余因子行列取得関数
+    /// adjugate / 余因子行列取得関数
     ///
     /// 行p, 列q についての余因子行列を取得し、Result型に
     /// くるんだ Matrix<T>型として返却する。オブジェクト本体の
@@ -567,7 +567,7 @@ where
         Ok(res)
     }
 
-    /// 行列式
+    /// determinant / 行列式
     ///
     /// 行列式を計算し、型Tで結果を返却する
     ///
@@ -607,7 +607,7 @@ where
         }
     }
 
-    /// 正則行列判定
+    /// regularity validator / 正則行列判定
     ///
     /// 正則行列であるかどうか調べ、Result型にくるんで
     /// オブジェクト参照を返却する。
@@ -627,7 +627,7 @@ where
         }
     }
 
-    /// 逆行列
+    /// inverse matrix / 逆行列
     ///
     /// 正則行列の逆行列を取得する関数。
     /// selfの逆行列としてResult型に格納したMatrix<T>を返却し、
@@ -643,7 +643,7 @@ where
     ///        [3.0,1.0,2.0],
     ///        [-1.0,3.0,1.0]
     /// ];
-    /// let result = d.inverse().unwrap().get();
+    /// let result = d.inverse().unwrap().clone();
     /// let result_cmp = mat![
     ///    f64:
     ///        [0.3333333333333333, 0.13333333333333333, -0.26666666666666666],
@@ -686,7 +686,7 @@ where
                         }
                     }
                 }
-                Ok(res.transpose().get())
+                Ok(res.transpose().clone())
             }
         }
     }
@@ -699,7 +699,7 @@ where
         match self.is_square() {
             Err(_) => Err("identify matrix is not defined for a rectangle matrix"),
             Ok(_) => {
-                let mut res = self.get();
+                let mut res = self.clone();
                 let one = T::from(0x1u8);
                 res.fill_zero();
                 for i in 0..res.rows() {
@@ -977,7 +977,7 @@ mod tests_matrix_manipulation {
                [3.0,1.0,2.0],
                [-1.0,3.0,1.0]
         ];
-        let result = d.inverse().unwrap().get();
+        let result = d.inverse().unwrap().clone();
         let result_cmp = mat![
            f64:
                [0.3333333333333333, 0.13333333333333333, -0.26666666666666666],
