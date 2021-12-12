@@ -2,6 +2,7 @@ use std::ops::{Div, Rem, Shl, Shr};
 use crate::core::Matrix;
 use crate::mat;
 use PartialEq;
+use ToString;
 use std::ops::{Add, Mul, Sub};
 
 /// Addition / 行列の加算
@@ -281,8 +282,25 @@ impl<T: Copy + std::ops::Shr<Output = T>> Shr for Matrix<T> {
     }
 }
 
+/// 文字列行列への変換 / conversion to String matrix
+///
+/// ToStringを実装する元を有する行列について、全要素をString型に変換したMatrix<String>を返却。
+///
+impl<T: Copy + ToString> Matrix<T> {
+    fn to_string(&self) -> Matrix<String> {
+        let mut res = mat![String];
+        for i in 0..self.data.len() {
+            res.data.push(Vec::new());
+            for j in 0..self.data.len() {
+                res.data[i].push(self.data[i][j].to_string());
+            }
+        }
+        res
+    }
+}
 
-/// methods for numeric calculation / 数値計算用共通メソッド群
+
+/// 数値計算用共通メソッド群 / methods for numeric calculation
 ///
 /// 整数型、浮動小数点型、虚数型に対する演算処理
 ///
@@ -905,6 +923,30 @@ mod tests_matrix_bitshift_operator {
             println!();
         }
         assert_eq!(m >> b == res, true);
+    }
+
+}
+
+#[cfg(test)]
+mod tests_matrix_conversion {
+    use crate::core::Matrix;
+    use crate::mat;
+
+    #[test]
+    fn test_to_string(){
+        let m = mat![i32: [2,2,3],[4,5,6],[7,8,9]];
+        let res = mat![
+            &str:
+            ["2","2","3"],
+            ["4","5","6"],
+            ["7","8","9"]
+        ];
+        let s = m.to_string();
+        for i in 0..s.data.len() {
+            for j in 0..s.data[i].len() {
+                assert_eq!(s.data[i][j].as_str() == res.data[i][j], true);
+            }
+        }
     }
 }
 
