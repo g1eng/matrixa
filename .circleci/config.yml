@@ -7,14 +7,20 @@ jobs:
     steps:
       - checkout
       - run:
-          name: install grcov
-          command: cargo install grcov
+          name: run build
+          command: cargo build
       - run:
-          name: Run test
+          name: run test
           command: cargo test
       - run:
-          name: Get coverage test
-          command: grcov . > coverage/lcov.info
+          name: generate coverage
+          command: |
+            cargo install grcov
+            rustup component add llvm-tools-preview
+            export RUSTFLAGS="-Zinstrument-coverage"
+            cargo build --verbose
+            LLVM_PROFILE_FILE="suzume-%p-%m.profraw" cargo test --verbose
+            grcov . --binary-path ./target/debug/ -s . -t lcov --branch --ignore-not-existing --ignore "/*" -o coverage/lcov.info
       - run:
           name: uploade coverage to codecov
           command: |

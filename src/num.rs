@@ -288,14 +288,14 @@ impl<T: Copy + std::ops::Shr<Output = T>> Shr for Matrix<T> {
 impl<T> Matrix<T>
 where
     T: Copy
-        + std::ops::Add<Output = T>
-        + std::ops::Sub<Output = T>
-        + std::ops::Mul<Output = T>
-        + std::ops::Div<Output = T>
-        + std::fmt::Display
-        + std::fmt::Debug
-        + PartialEq
-        + From<u8>,
+    + std::ops::Add<Output = T>
+    + std::ops::Sub<Output = T>
+    + std::ops::Mul<Output = T>
+    + std::ops::Div<Output = T>
+    + std::fmt::Display
+    + std::fmt::Debug
+    + PartialEq
+    + From<u8>,
 {
     /// zero acquisition / ゼロ値取得関数
     ///
@@ -374,45 +374,6 @@ where
             }
         }
         Ok(self)
-    }
-
-    /// 行列セッタ
-    ///
-    /// Vec<Vec<T>>への参照として行列データをミュータブルにセットする関数。
-    ///
-    /// ```rust
-    /// use matrixa::core::Matrix;
-    /// use matrixa::mat;
-    ///
-    /// let mut m = mat![i32:[1]];
-    /// let v = vec![
-    ///     vec![1,2,3],
-    ///     vec![1,2,3],
-    /// ];
-    ///
-    /// m.set(&v);
-    /// for i in 0..1 {
-    ///     for j in 0..2 {
-    ///         assert_eq!(m.dump()[i][j],v[i][j]);
-    ///     }
-    /// }
-    /// m.print();
-    /// ```
-    ///
-    pub fn set(&mut self, m: &Vec<Vec<T>>) {
-        if m.len() == 0 {
-            panic!("argument has zero length");
-        }
-        if self.debug {
-            println!("new data set: {:?}", m);
-        }
-        self.resize(m.len(), m[0].len())
-            .expect("failed to resize the matrix");
-        for i in 0..self.data.len() {
-            for j in 0..self.data[0].len() {
-                self.data[i][j] = m[i][j]
-            }
-        }
     }
 
     /// scalar addition / スカラー加算
@@ -769,6 +730,7 @@ where
     }
 
     /// 単位行列
+    ///
     /// 行列と同一サイズの単位行列が定義できる場合にはそれを生成し、
     /// 新規のMatrix<T>インスタンスとしてResult型に格納して返却する
     ///
@@ -856,8 +818,7 @@ mod tests_matrix_numeric_operator {
         let m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
         let n = mat![i32: [2,3,4],[5,6,7],[8,9,10]];
         let res = mat![i32: [3,5,7],[9,11,13],[15,17,19]];
-        let e = m + n;
-        assert_eq!(e == res, true)
+        assert_eq!(m + n == res, true)
     }
 
     #[test]
@@ -865,8 +826,7 @@ mod tests_matrix_numeric_operator {
         let m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
         let n = mat![i32: [2,3,4],[5,6,7],[8,9,10]];
         let res = mat![i32: [-1,-1,-1],[-1,-1,-1],[-1,-1,-1]];
-        let e = m - n;
-        assert_eq!(e == res, true)
+        assert_eq!(m - n == res, true)
     }
 
     #[test]
@@ -874,11 +834,28 @@ mod tests_matrix_numeric_operator {
         let m = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
         let n = mat![i32: [2,3,4],[5,6,7],[8,9,10]];
         let res = mat![i32: [36,42,48],[81,96,111],[126,150,174]];
-        let e = m * n;
-        assert_eq!(e == res, true)
+        assert_eq!(m * n == res, true)
+    }
+
+    #[test]
+    fn test_slash() {
+        let mut m = mat![i32: [2,4,6],[8,10,12],[14,16,18]];
+        let n = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
+        let res = mat![i32: [2,2,2],[2,2,2],[2,2,2]];
+        assert_eq!(m / n == res, true)
+    }
+
+    #[test]
+    fn test_percent(){
+        let m = mat![i32: [1,2,3],[4,5,6],[-7,-8,-9]];
+        let n = mat![i32: [-7,-8,-9],[6,5,4],[3,2,1]];
+        let result = mat![i32: [1,2,3],[4,0,2],[-1,0,0]];
+        let m = m % n;
+        assert_eq!(m == result, true)
     }
 
 }
+
 
 mod tests_matrix_bitshift_operator {
     use crate::core::Matrix;
@@ -967,15 +944,6 @@ mod tests_matrix_numeric_manipulation {
         let result = mat![i32: [1,0,1],[0,1,0],[-1,0,-1]];
         m.residue(2);
         assert_eq!(m == result, true);
-    }
-
-    #[test]
-    fn test_rem(){
-        let m = mat![i32: [1,2,3],[4,5,6],[-7,-8,-9]];
-        let n = mat![i32: [-7,-8,-9],[6,5,4],[3,2,1]];
-        let result = mat![i32: [1,2,3],[4,0,2],[-1,0,0]];
-        let m = m % n;
-        assert_eq!(m == result, true)
     }
 
     #[test]

@@ -1,6 +1,8 @@
 # About
 
-matrixa.rs is an experimental linear algebra library, especially featuring on matrix, list manipulation on Rust.
+[![codecov](https://codecov.io/gh/g1eng/matrixa/branch/master/graph/badge.svg?token=PSSEN7S1FH)](https://codecov.io/gh/g1eng/matrixa)
+
+matrixa.rs is an experimental library for linear algebra and list manipulation on Rust.
 
 It supports mathematical and string manipulation for data, within the type of `Matrix<T>` which holds the payload in vector-in-vector with dynamic length of row and column.
 You can declare and manipulate two-dimensional matrices as an object like this:
@@ -54,6 +56,7 @@ The project aims to be:
 ## Core functionalities
 
 ### Core manipulator or formatters:
+
 * new
 * clone
 * row_replace
@@ -66,9 +69,9 @@ The project aims to be:
   - equal `=`
   - not equal `!=`
   
-## Numerical operations
+## Mathematical operations
 
-### Supported numerical operations
+### Numerical operations
 
 | category | operator | scalar | matrix | 
 | --- | --- | --- | --- | 
@@ -91,16 +94,14 @@ The project aims to be:
 | bit xor | ^ | exclusive disjunction |
 | not | ! | negation |
 
-### supported matrices to generate for:
+### Matrix calculation
   - inverse matrix
   - identity matrix
   - adjugate matrix
-
-### supported calculators:
   - determinant
-  - regular matrix detector
+  - regular matrix detection
   - trace
 
-## string operation
+## String manipulation
 
 WIP

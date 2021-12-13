@@ -91,6 +91,7 @@ where T: Clone,
 /// ```
 ///
 impl<T: Copy + std::cmp::PartialEq + std::fmt::Debug> PartialEq for Matrix<T>
+where T: PartialEq
 {
     fn eq(&self, other: &Self) -> bool {
         if !self.has_same_size_with(other.clone()) {
@@ -549,6 +550,67 @@ impl<T> Matrix<T>
     pub fn range_check(&self, row: usize, col: usize) -> Result<&Self, &str> {
         self.row_check(row)?.col_check(col)
     }
+
+    /// 行列セッタ / data setter
+    ///
+    /// Vec<Vec<T>>への参照として行列データをセットする関数。
+    ///
+    /// ```rust
+    /// use matrixa::core::Matrix;
+    /// use matrixa::mat;
+    ///
+    /// let mut m = mat![i32:[1]];
+    /// let v = vec![
+    ///     vec![1,2,3],
+    ///     vec![1,2,3],
+    /// ];
+    ///
+    /// m.set(&v);
+    /// for i in 0..1 {
+    ///     for j in 0..2 {
+    ///         assert_eq!(m.dump()[i][j],v[i][j]);
+    ///     }
+    /// }
+    /// m.print();
+    /// ```
+    ///
+    pub fn set(&mut self, m: &Vec<Vec<T>>) {
+        if m.len() == 0 {
+            panic!("argument has zero length");
+        }
+        if self.debug {
+            println!("new data set: {:?}", m);
+        }
+        self.data = m.clone();
+    }
+
+    /// 行列ゲッタ / data getter
+    ///
+    /// 設定済みの行列データを新規 Vec<Vec<T>> インスタンスとして返却する。
+    ///
+    /// ```rust
+    /// use matrixa::core::Matrix;
+    /// use matrixa::mat;
+    ///
+    /// let mut m = mat![i32];
+    /// let v = vec![
+    ///     vec![1,2,3],
+    ///     vec![1,2,3],
+    /// ];
+    /// m.data = v.clone();
+    /// m.print();
+    ///
+    /// let e = m.get();
+    /// for i in 0..1 {
+    ///     for j in 0..2 {
+    ///         assert_eq!(e[i][j], v[i][j]);
+    ///     }
+    /// }
+    /// ```
+    ///
+    pub fn get(&self) -> Vec<Vec<T>> {
+        self.data.clone()
+    }
 }
 
 
@@ -557,6 +619,7 @@ impl<T> Matrix<T>
 /// 異なる型を元とする行列への型変換を行う関数群。
 ///
 impl<T: Copy + ToString> Matrix<T> {
+
     /// 文字列行列への変換 / conversion to String matrix
     ///
     /// ToStringを実装する元を有する行列について、全要素をString型に変換したMatrix<String>を返却。
@@ -885,6 +948,13 @@ mod tests_matrix_conversion {
         for i in 0..s.data.len() {
             for j in 0..s.data[i].len() {
                 assert_eq!(s.data[i][j].as_str() == res.data[i][j], true);
+            }
+        }
+
+        let t = res.to_string();
+        for i in 0..t.data.len() {
+            for j in 0..t.data[i].len() {
+                assert_eq!(t.data[i][j].as_str() == res.data[i][j], true);
             }
         }
     }
