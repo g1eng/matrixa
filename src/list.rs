@@ -212,36 +212,36 @@ mod tests_matrix_conversion {
     use crate::core::Matrix;
     use crate::mat;
 
-    #[test]
-    fn test_eq_string() {
-        let m = mat![
-            &str:
-                ["abcde","fghij","klmn0"],
-                ["bbcde","matched","olmn0"]
-        ].to_string();
-        let n = mat![
-            &str:
-                ["abcde","fghij","klmn0"],
-                ["bbcde","matched","olmn0"]
-        ].to_string();
-        let p = mat![
-            &str:
-                ["abcde","fghij","klmn0"],
-                ["bbcde","NOT matched","olmn0"]
-        ].to_string();
-        assert_eq!(m.data.len(), 2);
-        assert_eq!(m.data[0].len(), 3);
-        assert_eq!(m == m, true);
-
-        assert_eq!(m.has_same_size_with(n.clone()), true);
-        assert_eq!(m == n, true);
-        assert_eq!(m != n, false);
-        assert_eq!(m == p, false);
-        assert_eq!(m != p, true);
-        assert_eq!(n == p, false);
-        assert_eq!(n != p, true);
-        println!("{}",m.data[0][0].contains("a"))
-    }
+    // #[test]
+    // fn test_eq_string() {
+    //     let m = mat![
+    //         &str:
+    //             ["abcde","fghij","klmn0"],
+    //             ["bbcde","matched","olmn0"]
+    //     ].to_string();
+    //     let n = mat![
+    //         &str:
+    //             ["abcde","fghij","klmn0"],
+    //             ["bbcde","matched","olmn0"]
+    //     ].to_string();
+    //     let p = mat![
+    //         &str:
+    //             ["abcde","fghij","klmn0"],
+    //             ["bbcde","NOT matched","olmn0"]
+    //     ].to_string();
+    //     assert_eq!(m.data.len(), 2);
+    //     assert_eq!(m.data[0].len(), 3);
+    //     assert_eq!(m == m, true);
+    //
+    //     assert_eq!(m.has_same_size_with(n.clone()), true);
+    //     assert_eq!(m == n, true);
+    //     assert_eq!(m != n, false);
+    //     assert_eq!(m == p, false);
+    //     assert_eq!(m != p, true);
+    //     assert_eq!(n == p, false);
+    //     assert_eq!(n != p, true);
+    //     println!("{}",m.data[0][0].contains("a"))
+    // }
 
     #[test]
     fn test_contains(){
