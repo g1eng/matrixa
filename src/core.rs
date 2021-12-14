@@ -36,7 +36,7 @@ pub struct Matrix<T> {
 }
 
 
-/// イテレータ実装
+/// イテレータ実装 / Iterator
 ///
 /// Matrix はIterator を実装しており、for文等での数え上げに使える。
 ///
@@ -72,7 +72,7 @@ where T: Clone,
     }
 }
 
-/// 行列の完全一致・不一致 (PartialEq)
+/// 行列の完全一致・不一致 / PartialEq
 ///
 /// 行列の要素ごとの比較を行い、結果をboolで返却する。
 /// 行および列の数が一致しない行列が指定された場合はパニックする。
@@ -90,7 +90,7 @@ where T: Clone,
 /// assert_eq!(n == o, false);
 /// ```
 ///
-impl<T: Copy + std::cmp::PartialEq + std::fmt::Debug> PartialEq for Matrix<T>
+impl<T: Clone + std::cmp::PartialEq + std::fmt::Debug> PartialEq for Matrix<T>
 where T: PartialEq
 {
     fn eq(&self, other: &Self) -> bool {
@@ -119,7 +119,7 @@ where T: PartialEq
     }
 }
 
-/// 行列インスンタンス初期化用マクロ
+/// 行列インスンタンス初期化用マクロ / initialization macro
 ///
 /// ```rust
 /// use matrixa::core::Matrix;
@@ -186,12 +186,12 @@ impl<T> Matrix<T> {
 
 impl<T: Debug> Matrix<T>
 {
-    /// サイズ検証
+    /// サイズ検証 / size matcher
     ///
     /// 行列のサイズを引数行列のサイズと比較し、結果をResult型にくるんで返却する。
     /// 一致する場合にはSelf型、一致しない場合にはエラーメッセージを返却する。
     ///
-    pub fn has_same_size_with(&self, other: Self) -> bool {
+    pub fn has_same_size_with(&self, other: &Self) -> bool {
         match self {
             _ if self.data.len() == 0 => {
                 println!("zero length origin for addition");
@@ -216,7 +216,7 @@ impl<T: Debug> Matrix<T>
 }
 
 impl<T: Copy> Clone for Matrix<T> {
-    /// 複製
+    /// 複製 / Clone
     ///
     /// selfと同一のデータを有する新規インスタンスを生成する。
     /// TがCopyを実装する場合、Matrix構造体のデータはVec<Vec<T>>であるためCloneを実装する。
@@ -717,7 +717,7 @@ mod tests_matrix {
     fn test_eq() {
         let m = mat![i32: [1,2,3,5,5], [3,6,1,4,2], [3,6,0,1,5]];
         let n = mat![i32: [1,2,3,5,5], [3,6,1,4,2], [3,6,0,1,5]];
-        assert_eq!(m.has_same_size_with(n.clone()), true);
+        assert_eq!(m.has_same_size_with(&n), true);
         assert_eq!(m == m, true);
         assert_eq!(m == n, true);
     }
@@ -726,7 +726,7 @@ mod tests_matrix {
     fn test_ne() {
         let m = mat![i32: [1,2,3,5,5], [3,6,1,4,2], [3,6,0,1,5]];
         let n = mat![i32: [1,2,3,5,5], [3,6,199293,4,2], [3,6,0,1,5]];
-        assert_eq!(m.has_same_size_with(n.clone()), true);
+        assert_eq!(m.has_same_size_with(&n), true);
         assert_eq!(m != n, true);
     }
 
@@ -750,7 +750,36 @@ mod tests_matrix {
         assert_eq!(m.data[0].len(), 3);
         assert_eq!(m == m, true);
 
-        assert_eq!(m.has_same_size_with(n.clone()), true);
+        assert_eq!(m.has_same_size_with(&n), true);
+        assert_eq!(m == n, true);
+        assert_eq!(m != n, false);
+        assert_eq!(m == p, false);
+        assert_eq!(m != p, true);
+        assert_eq!(n == p, false);
+        assert_eq!(n != p, true);
+        println!("{}",m.data[0][0].contains("a"))
+    }
+
+    #[test]
+    fn test_eq_string() {
+        let m = mat![
+            &str:
+                ["abcde","fghij","klmn0"],
+                ["bbcde","matched","olmn0"]
+        ].to_string();
+        let n = mat![
+            &str:
+                ["abcde","fghij","klmn0"],
+                ["bbcde","matched","olmn0"]
+        ].to_string();
+        let p = mat![
+            &str:
+                ["abcde","fghij","klmn0"],
+                ["bbcde","NOT matched","olmn0"]
+        ].to_string();
+        assert_eq!(m == m, true);
+
+        assert_eq!(m.has_same_size_with(&n), true);
         assert_eq!(m == n, true);
         assert_eq!(m != n, false);
         assert_eq!(m == p, false);

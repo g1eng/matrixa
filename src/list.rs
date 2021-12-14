@@ -82,7 +82,7 @@ impl Matrix<String>  {
     ///
     /// 各元の終端文字を除去し、データ変更後の自身への参照を返却する
     ///
-    pub fn pop_char(&mut self) -> &Self {
+    pub fn pop_char(&mut self) -> &mut Self {
         for i in 0..self.data.len() {
             for j in 0..self.data[i].len() {
                 self.data[i][j].pop();
@@ -94,7 +94,8 @@ impl Matrix<String>  {
     /// 1文字追加
     ///
     /// 各元に終端文字を追加し、データ変更後の自身への参照を返却する
-    pub fn push_char(&mut self, ch: char) -> &Self {
+    ///
+    pub fn push_char(&mut self, ch: char) -> &mut Self {
         for i in 0..self.data.len() {
             for j in 0..self.data[i].len() {
                 self.data[i][j].push(ch);
@@ -107,24 +108,10 @@ impl Matrix<String>  {
     ///
     /// 各元の末尾に文字列を追加し、データ変更後の自身への参照を返却する
     ///
-    pub fn push_str(&mut self, s: &str) -> &Self {
+    pub fn push_str(&mut self, s: &str) -> &mut Self {
         for i in 0..self.data.len() {
             for j in 0..self.data[i].len() {
                 self.data[i][j].push_str(s);
-            }
-        }
-        self
-    }
-
-    /// 文字列縮小
-    ///
-    /// 各元を引数(usize)で指定した長さに縮小する。
-    /// 指定長より短い文字列は影響を受けない。
-    ///
-    pub fn shrink_to(&mut self, min_capacity: usize) -> &Self {
-        for i in 0..self.data.len() {
-            for j in 0..self.data[i].len() {
-                self.data[i][j].shrink_to(min_capacity);
             }
         }
         self
@@ -134,7 +121,7 @@ impl Matrix<String>  {
     ///
     /// 各元に含まれる特定文字列(from)を、指定文字列(to)で置換する。
     ///
-    pub fn replace(&mut self, from: &str, to: &str) -> &Self {
+    pub fn replace(&mut self, from: &str, to: &str) -> &mut Self {
         for i in 0..self.data.len() {
             for j in 0..self.data[i].len() {
                 self.data[i][j] = self.data[i][j].replace(from, to);
@@ -160,7 +147,7 @@ impl Matrix<String>  {
 
     /// 先頭空白文字除去
     ///
-    pub fn trim_start(&mut self) -> &Self {
+    pub fn trim_start(&mut self) -> &mut Self {
         for i in 0..self.data.len() {
             for j in 0..self.data[i].len() {
                 self.data[i][j] = String::from(self.data[i][j].trim_start())
@@ -171,7 +158,7 @@ impl Matrix<String>  {
 
     /// 終端空白文字除去
     ///
-    pub fn trim_end(&mut self) -> &Self {
+    pub fn trim_end(&mut self) -> &mut Self {
         for i in 0..self.data.len() {
             for j in 0..self.data[i].len() {
                 self.data[i][j] = String::from(self.data[i][j].trim_end())
@@ -182,15 +169,13 @@ impl Matrix<String>  {
 
     /// 先頭及び終端空白文字除去
     ///
-    pub fn trim(&self) -> Matrix<String> {
-        let mut res = mat![String];
+    pub fn trim(&mut self) -> &mut Self {
         for i in 0..self.data.len() {
-            res.data.push(Vec::new());
             for j in 0..self.data[i].len() {
-                res.data[i].push(String::from(self.data[i][j].trim()));
+                self.data[i][j] = String::from(self.data[i][j].trim());
             }
         }
-        res
+        self
     }
 
     /// バイト列変換
@@ -212,42 +197,11 @@ mod tests_matrix_conversion {
     use crate::core::Matrix;
     use crate::mat;
 
-    // #[test]
-    // fn test_eq_string() {
-    //     let m = mat![
-    //         &str:
-    //             ["abcde","fghij","klmn0"],
-    //             ["bbcde","matched","olmn0"]
-    //     ].to_string();
-    //     let n = mat![
-    //         &str:
-    //             ["abcde","fghij","klmn0"],
-    //             ["bbcde","matched","olmn0"]
-    //     ].to_string();
-    //     let p = mat![
-    //         &str:
-    //             ["abcde","fghij","klmn0"],
-    //             ["bbcde","NOT matched","olmn0"]
-    //     ].to_string();
-    //     assert_eq!(m.data.len(), 2);
-    //     assert_eq!(m.data[0].len(), 3);
-    //     assert_eq!(m == m, true);
-    //
-    //     assert_eq!(m.has_same_size_with(n.clone()), true);
-    //     assert_eq!(m == n, true);
-    //     assert_eq!(m != n, false);
-    //     assert_eq!(m == p, false);
-    //     assert_eq!(m != p, true);
-    //     assert_eq!(n == p, false);
-    //     assert_eq!(n != p, true);
-    //     println!("{}",m.data[0][0].contains("a"))
-    // }
-
     #[test]
     fn test_contains(){
         let s = mat![
             &str:
-            ["akasaka","sakanoue","kosaka"],
+            ["akasaka","sakamoto","kosaka"],
             ["ikasama","isasaka","kuwasaka"],
             ["kawasaki","ishikawa","shikamoto"]
         ].to_string();
@@ -270,7 +224,7 @@ mod tests_matrix_conversion {
     fn test_starts_with(){
         let s = mat![
             &str:
-            ["akasaka","sakanoue","kosaka"],
+            ["akasaka","sakamoto","kosaka"],
             ["ikasama","isasaka","kuwasaka"],
             ["kawasaki","ishikawa","shikamoto"]
         ].to_string();
@@ -287,7 +241,7 @@ mod tests_matrix_conversion {
     fn test_ends_with(){
         let s = mat![
             &str:
-            ["akasaka","sakanoue","kosaka"],
+            ["akasaka","sakamoto","kosaka"],
             ["ikasama","isasaka","kuwasaka"],
             ["kawasaki","ishikawa","shikamoto"]
         ].to_string();
@@ -323,13 +277,13 @@ mod tests_matrix_conversion {
             &str:
             ["hirakawa","ﾋﾗｶﾜ","平川"],
             ["122.1","Über",""],
-            ["鑛滓","　",","]
+            ["鑛滓","　","🐿"]
         ].to_string();
         let res = mat![
             bool:
             [true,false,false],
             [true,false,true],
-            [false,false,true]
+            [false,false,false]
         ];
         assert_eq!(s.is_ascii() == res, true);
     }
@@ -345,19 +299,119 @@ mod tests_matrix_conversion {
             &str:
             ["ab", "de"],
             ["gh", "jk"]
-        ];
+        ].to_string();
         let res2 = mat![
             &str:
-            ["ab", "de"],
-            ["gh", "jk"]
-        ];
+            ["abc", "dec"],
+            ["ghc", "jkc"]
+        ].to_string();
         s.pop_char();
-        // assert_eq!(s == res1, true);
-        // for i in 0..s.data.len() {
-        //     for j in 0..s.data[i].len() {
-        //
-        //     }
-        // }
+        assert_eq!(s == res1, true);
+        s.push_char('c');
+        assert_eq!(s == res2, true);
+    }
 
+    #[test]
+    fn test_pop_push_str(){
+        let mut s = mat![
+            &str:
+            ["可燃ごみ", "燃えないごみ"],
+            ["資源ごみ", "粗大ごみ"]
+        ].to_string();
+        let res1 = mat![
+            &str:
+            ["可燃", "燃えない"],
+            ["資源", "粗大"]
+        ].to_string();
+        let res2 = mat![
+            &str:
+            ["可燃ツイート", "燃えないツイート"],
+            ["資源ツイート", "粗大ツイート"]
+        ].to_string();
+        assert_eq!(*s.pop_char().pop_char() == res1, true);
+        assert_eq!(*s.push_str("ツイート") == res2, true);
+    }
+
+    #[test]
+    fn test_replace(){
+        let mut s = mat![
+            &str:
+            ["可燃ごみ", "燃えないごみ"],
+            ["資源ごみ", "粗大ごみ"]
+        ].to_string();
+        let res = mat![
+            &str:
+            ["可燃ツイート", "燃えないツイート"],
+            ["資源ツイート", "粗大ツイート"]
+        ].to_string();
+        s.replace("ごみ", "ツイート");
+        assert_eq!(s == res, true);
+    }
+
+    #[test]
+    fn test_to_strlen(){
+        let s = mat![
+            &str:
+            ["hirakawa","ﾋﾗｶﾜ","平川"],
+            ["122.1","Über",""],
+            ["鑛滓","　","🍣🐿"]
+        ].to_string();
+        let res = mat![
+            usize:
+            [8,12,6],
+            [5,5,0],
+            [6,3,8]
+        ];
+        let e = s.to_strlen();
+        e.print();
+        assert_eq!(e == res, true);
+    }
+
+    #[test]
+    fn test_trim(){
+        let s1 = mat![
+            &str:
+            [" I love ", " << penguin >> "],
+            ["so much ", ". "]
+        ];
+        let mut s2 = s1.clone().to_string();
+        let mut s1 = s1.to_string();
+
+        let res1 = mat![
+            &str:
+            ["I love ", "<< penguin >> "],
+            ["so much ", ". "]
+        ].to_string();
+
+        let res2 = mat![
+            &str:
+            ["I love", "<< penguin >>"],
+            ["so much", "."]
+        ].to_string();
+
+        s1.trim_start();
+        assert_eq!(s1 == res1, true);
+        s1.trim_end();
+        assert_eq!(s1 == res2, true);
+        s2.trim();
+        s2.print();
+        assert_eq!(s2 == res2, true);
+    }
+
+    #[test]
+    fn test_as_bytes(){
+        let s = mat![
+            &str:
+            ["akasaka","sakamoto","kosaka"],
+            ["ikasama","isasaka","kuwasaka"],
+            ["kawasaki","ishikawa","shikamoto"]
+        ].to_string();
+        let t = mat![
+            &str:
+            ["akasaka","sakamoto","kosaka"],
+            ["ikasama","isasaka","kuwasaka"],
+            ["kawasaki","ishikawa","shikamoto"]
+        ].to_string();
+        assert_eq!(s.as_bytes() == t.as_bytes(), true);
     }
 }

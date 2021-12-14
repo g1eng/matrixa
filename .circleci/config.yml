@@ -3,9 +3,14 @@ jobs:
   build:
     working_directory: ~/repo
     docker:
-      - image: circleci/rust:buster
+      - image: cimg/rust:1.57.0
     steps:
       - checkout
+      - run:
+          name: install nightly toolchain
+          command: |
+            rustup toolchain install nightly-x86_64-unknown-linux-gnu
+            rustup default nightly-x86_64-unknown-linux-gnu
       - run:
           name: run build
           command: cargo build

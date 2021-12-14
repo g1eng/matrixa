@@ -31,7 +31,7 @@ impl<T: std::ops::Add<Output = T>> Add for Matrix<T>
 {
     type Output = Self;
     fn add(self, other: Self) -> Self {
-        if !self.has_same_size_with(other.clone()) {
+        if !self.has_same_size_with(&other) {
             panic!("abort");
         }
 
@@ -79,7 +79,7 @@ impl<T: std::ops::Sub<Output = T>> Sub for Matrix<T>
     type Output = Self;
     fn sub(self, other: Self) -> Self {
 
-        if !self.has_same_size_with(other.clone()) {
+        if !self.has_same_size_with(&other) {
             panic!("abort");
         }
 
@@ -236,7 +236,7 @@ impl<
 impl<T: Copy + std::ops::Div<Output = T> + std::fmt::Debug> Div for Matrix<T>{
     type Output = Self;
     fn div(self, other: Self) -> Self::Output {
-        if !self.has_same_size_with(other.clone()) {
+        if !self.has_same_size_with(&other) {
             panic!("abort");
         }
 
@@ -839,7 +839,7 @@ mod tests_matrix_numeric_operator {
 
     #[test]
     fn test_slash() {
-        let mut m = mat![i32: [2,4,6],[8,10,12],[14,16,18]];
+        let m = mat![i32: [2,4,6],[8,10,12],[14,16,18]];
         let n = mat![i32: [1,2,3],[4,5,6],[7,8,9]];
         let res = mat![i32: [2,2,2],[2,2,2],[2,2,2]];
         assert_eq!(m / n == res, true)
